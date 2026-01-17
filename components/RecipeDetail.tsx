@@ -16,8 +16,9 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
   const totalTime = recipe.prep_minutes + recipe.cook_minutes
   const showFullContent = !recipe.is_pro || isSubscribed
   
-  // Get the current URL for Pinterest sharing
-  const recipeUrl = typeof window !== 'undefined' ? window.location.href : `https://yoursite.com/recipes/${recipe.slug}`
+  // Get the production URL for Pinterest sharing
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://recipe-kappa-eight.vercel.app'
+  const recipeUrl = `${baseUrl}/recipes/${recipe.slug}`
   const shareDescription = `${recipe.title} - ${recipe.description || 'Delicious recipe you can actually cook!'}`
 
   return (
