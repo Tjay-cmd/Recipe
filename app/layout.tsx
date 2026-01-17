@@ -23,6 +23,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Pinterest Domain Verification - Add your code after claiming */}
+        {process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION && (
+          <meta name="p:domain_verify" content={process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION} />
+        )}
+      </head>
       <body className={inter.className}>
         <Header />
         <main className="min-h-screen">{children}</main>
