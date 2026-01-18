@@ -181,8 +181,12 @@ export function ShoppingList() {
     )
   }
 
+  function handlePrint() {
+    window.print()
+  }
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto print-shopping-list">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Shopping Lists</h1>
         <p className="text-gray-600">Organize your ingredients and never forget what to buy!</p>
@@ -248,9 +252,18 @@ export function ShoppingList() {
       {activeList ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           {/* List Header */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 no-print">
             <h2 className="text-xl font-semibold">{activeList.name}</h2>
             <div className="flex gap-2">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print
+              </button>
               {activeList.items.some(i => i.checked) && (
                 <button
                   onClick={() => clearCheckedItems(activeList.id)}
@@ -266,6 +279,11 @@ export function ShoppingList() {
                 Delete List
               </button>
             </div>
+          </div>
+          
+          {/* Print Header - Only visible when printing */}
+          <div className="hidden print-only mb-6">
+            <h2 className="text-xl font-semibold">{activeList.name}</h2>
           </div>
 
           {/* Items - Grouped by Recipe or Simple List */}

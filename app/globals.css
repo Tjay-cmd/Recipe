@@ -20,3 +20,128 @@
     overflow: hidden;
   }
 }
+
+/* Print Styles */
+@media print {
+  /* Hide navigation, headers, footers, buttons */
+  header,
+  footer,
+  nav,
+  button:not(.print-keep),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Recipe Print Layout */
+  .print-recipe {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-recipe h1 {
+    font-size: 24pt !important;
+    margin-bottom: 12pt !important;
+    page-break-after: avoid;
+  }
+
+  .print-recipe img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    margin: 12pt 0 !important;
+  }
+
+  .print-recipe section {
+    page-break-inside: avoid;
+    margin-bottom: 18pt !important;
+  }
+
+  .print-recipe h2 {
+    font-size: 18pt !important;
+    margin-top: 18pt !important;
+    margin-bottom: 8pt !important;
+    page-break-after: avoid;
+  }
+
+  .print-recipe ul,
+  .print-recipe ol {
+    margin-left: 20pt !important;
+    margin-bottom: 12pt !important;
+  }
+
+  .print-recipe li {
+    margin-bottom: 6pt !important;
+    font-size: 11pt !important;
+  }
+
+  /* Shopping List Print Layout */
+  .print-shopping-list {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-shopping-list h1,
+  .print-shopping-list h2 {
+    font-size: 18pt !important;
+    margin-bottom: 12pt !important;
+    page-break-after: avoid;
+  }
+
+  .print-shopping-list ul {
+    margin-left: 0 !important;
+    list-style: none !important;
+  }
+
+  .print-shopping-list li {
+    margin-bottom: 8pt !important;
+    font-size: 12pt !important;
+    padding-left: 24pt !important;
+    position: relative;
+  }
+
+  .print-shopping-list input[type="checkbox"] {
+    display: none !important;
+  }
+
+  .print-shopping-list li::before {
+    content: '☐ ';
+    position: absolute;
+    left: 0;
+    font-size: 14pt;
+    width: 20pt;
+  }
+
+  .print-shopping-list li input:checked + span::after {
+    content: ' ☑';
+  }
+
+  /* Show title when printing - add class to element you want visible only when printing */
+  .print-only {
+    display: block !important;
+  }
+
+  /* General print styles */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  @page {
+    margin: 1in;
+  }
+
+  /* Hide backgrounds and borders for cleaner print */
+  * {
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .print-recipe,
+  .print-shopping-list {
+    color: black !important;
+  }
+}

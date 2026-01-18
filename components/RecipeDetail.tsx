@@ -1,3 +1,5 @@
+'use client'
+
 import Image from 'next/image'
 import { Recipe } from '@/types/database'
 import { ProBadge } from './ProBadge'
@@ -23,8 +25,12 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
   const recipeUrl = `${baseUrl}/recipes/${recipe.slug}`
   const shareDescription = `${recipe.title} - ${recipe.description || 'Delicious recipe you can actually cook!'}`
 
+  function handlePrint() {
+    window.print()
+  }
+
   return (
-    <article className="max-w-4xl mx-auto">
+    <article className="max-w-4xl mx-auto print-recipe">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-4">
@@ -84,7 +90,7 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-4 mb-8">
+      <div className="flex flex-wrap gap-4 mb-8 no-print">
         <SaveButton recipeId={recipe.id} initialSaved={isFavorite} />
         <AddToShoppingListButton recipe={recipe} />
         {recipe.cover_image_url && (
@@ -94,6 +100,15 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
             description={shareDescription}
           />
         )}
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          Print Recipe
+        </button>
         <a
           href="#ingredients"
           className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
