@@ -42,49 +42,39 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
   async function loadReviews(supabase: ReturnType<typeof createClient>) {
     try {
-      // Load all reviews with user info (try with profile join, fallback without if it fails)
-      let reviewsData = null
-      let reviewsError = null
-      
-      const { data, error } = await supabase
+      // Load reviews without profile join (no foreign key relationship exists)
+      // This works for both logged-in and logged-out users
+      const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
-        .select('*, profiles(display_name)')
+        .select('*')
         .eq('recipe_id', recipeId)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        // If any error (400, RLS, table missing, etc.), try without profile join
-        console.warn('Error with profiles join, trying without:', error)
-        
-        const { data: simpleData, error: simpleError } = await supabase
-          .from('reviews')
-          .select('*')
-          .eq('recipe_id', recipeId)
-          .order('created_at', { ascending: false })
-        
-        if (simpleError) {
-          console.error('Error loading reviews (fallback failed):', simpleError)
-          // If table doesn't exist (42P01), that's okay - just show empty state
-          if (simpleError.code === '42P01') {
-            setReviews([])
-            setStats({
-              average_rating: 0,
-              total_ratings: 0,
-            })
-            setLoading(false)
-            return
-          }
-          // For any other error, still set empty state to prevent crashes
+      if (reviewsError) {
+        console.error('Error loading reviews:', reviewsError)
+        // If table doesn't exist (42P01), that's okay - show empty state
+        if (reviewsError.code === '42P01') {
           setReviews([])
-        } else {
-          reviewsData = simpleData
+          setStats({
+            average_rating: 0,
+            total_ratings: 0,
+          })
+          setLoading(false)
+          return
         }
+        // For any other error, set empty state to prevent crashes
+        setReviews([])
+      } else if (reviewsData) {
+        // Map reviews to add placeholder profiles data (for display_name)
+        const reviewsWithProfiles = reviewsData.map((review: any) => ({
+          ...review,
+          profiles: {
+            display_name: null // Will show as "Anonymous User" in UI
+          }
+        }))
+        setReviews(reviewsWithProfiles as Review[])
       } else {
-        reviewsData = data
-      }
-
-      if (reviewsData) {
-        setReviews(reviewsData as Review[])
+        setReviews([])
       }
 
       // Load rating stats
