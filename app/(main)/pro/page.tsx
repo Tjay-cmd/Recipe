@@ -3,34 +3,34 @@ import { ProCheckoutButton } from '@/components/ProCheckoutButton'
 
 const FEATURES = [
   {
-    title: 'Meal Plans',
-    description: 'Weekly meal plans curated for your dietary preferences',
+    title: 'Weekly Meal Planner',
+    description: 'Plan your meals with an interactive calendar and stay organized',
     icon: '📅',
   },
   {
-    title: 'Grocery Lists',
-    description: 'Auto-generated shopping lists for your meal plans',
+    title: 'Smart Shopping Lists',
+    description: 'Add recipe ingredients with one click and never forget what to buy',
     icon: '🛒',
   },
   {
-    title: 'Macro-Counted Plans',
-    description: 'Nutritional information and macro tracking for every recipe',
-    icon: '📊',
-  },
-  {
-    title: 'Weekly Drops',
-    description: 'Exclusive recipes delivered to your inbox every week',
-    icon: '📧',
-  },
-  {
-    title: 'Saved Collections',
-    description: 'Organize your favorite recipes into custom collections',
+    title: 'Exclusive Pro Recipes',
+    description: 'Access premium recipes with detailed instructions and tips',
     icon: '⭐',
   },
   {
-    title: 'Downloadable PDFs',
-    description: 'Download recipes as beautiful PDFs for offline use',
-    icon: '📄',
+    title: 'Recipe Collections',
+    description: 'Organize your favorite recipes into custom collections',
+    icon: '📚',
+  },
+  {
+    title: 'Cook Mode',
+    description: 'Distraction-free cooking with screen wake lock',
+    icon: '👨‍🍳',
+  },
+  {
+    title: 'Print Recipes',
+    description: 'Beautiful print-friendly layouts for offline cooking',
+    icon: '🖨️',
   },
 ]
 
@@ -41,7 +41,7 @@ export default function ProPage() {
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold mb-4">Upgrade to Pro</h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Get access to meal plans, grocery lists, macro tracking, and exclusive recipes.
+          Plan your meals, create smart shopping lists, and access exclusive recipes—all in one place.
         </p>
       </div>
 
@@ -97,27 +97,27 @@ export default function ProPage() {
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
               <tr className="border-b">
-                <td className="py-4 px-4">Meal plans</td>
+                <td className="py-4 px-4">Shopping Lists</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
               <tr className="border-b">
-                <td className="py-4 px-4">Grocery lists</td>
+                <td className="py-4 px-4">Meal Planner Calendar</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
               <tr className="border-b">
-                <td className="py-4 px-4">Macro tracking</td>
+                <td className="py-4 px-4">Exclusive Pro Recipes</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
               <tr className="border-b">
-                <td className="py-4 px-4">Weekly recipe drops</td>
+                <td className="py-4 px-4">Print-Friendly Layouts</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
               <tr>
-                <td className="py-4 px-4">Downloadable PDFs</td>
+                <td className="py-4 px-4">Recipe Collections</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>

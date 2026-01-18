@@ -3,6 +3,7 @@ import { Recipe } from '@/types/database'
 import { ProBadge } from './ProBadge'
 import { SaveButton } from './SaveButton'
 import { PinterestShareButton } from './PinterestShareButton'
+import { AddToShoppingListButton } from './AddToShoppingListButton'
 import { formatTime } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -84,6 +85,7 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
       {/* Actions */}
       <div className="flex flex-wrap gap-4 mb-8">
         <SaveButton recipeId={recipe.id} initialSaved={isFavorite} />
+        <AddToShoppingListButton recipe={recipe} />
         {recipe.cover_image_url && (
           <PinterestShareButton
             url={recipeUrl}

@@ -52,3 +52,29 @@ export type Subscription = {
 export type RecipeWithFavorite = Recipe & {
   is_favorite?: boolean
 }
+
+export type ShoppingListItem = {
+  text: string
+  checked: boolean
+  recipe_id?: string
+  recipe_title?: string
+}
+
+export type ShoppingList = {
+  id: string
+  user_id: string
+  name: string
+  items: ShoppingListItem[]
+  created_at: string
+  updated_at: string
+}
+
+export type MealPlan = {
+  id: string
+  user_id: string
+  recipe_id: string
+  planned_date: string
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null
+  notes: string | null
+  created_at: string
+}
