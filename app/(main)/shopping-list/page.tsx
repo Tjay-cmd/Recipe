@@ -29,6 +29,16 @@ export default function ShoppingListPage() {
 
     setUser(user)
 
+    // Check if user is admin (admins get Pro access automatically)
+    const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
+    const isAdmin = user.email ? adminEmails.includes(user.email) : false
+
+    if (isAdmin) {
+      setIsProUser(true)
+      setLoading(false)
+      return
+    }
+
     // Check if user has active Pro subscription
     const { data: subscription } = await supabase
       .from('subscriptions')
