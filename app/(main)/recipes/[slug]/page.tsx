@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { RecipeDetail } from '@/components/RecipeDetail'
+import { RelatedRecipes } from '@/components/RelatedRecipes'
 import { CookMode } from '@/components/CookMode'
 import { incrementRecipeViews } from '@/app/actions'
 import { Recipe } from '@/types/database'
@@ -177,6 +178,9 @@ export default async function RecipePage({ params }: RecipePageProps) {
         <CookMode>
           <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
         </CookMode>
+        
+        {/* Related Recipes */}
+        <RelatedRecipes currentRecipe={recipe} />
       </div>
     </>
   )
