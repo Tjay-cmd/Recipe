@@ -19,44 +19,72 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const supabase = createClient()
 
   useEffect(() => {
-    loadReviews()
-    checkUser()
+    const supabase = createClient()
+    
+    async function init() {
+      await checkUser(supabase)
+      await loadReviews(supabase)
+    }
+    
+    init()
   }, [recipeId])
 
-  async function checkUser() {
+  async function checkUser(supabase: ReturnType<typeof createClient>) {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
     
     if (user) {
-      loadUserRating()
+      loadUserRating(supabase)
     }
   }
 
-  async function loadReviews() {
+  async function loadReviews(supabase: ReturnType<typeof createClient>) {
     try {
-      // Load all reviews with user info
-      const { data: reviewsData, error: reviewsError } = await supabase
+      // Load all reviews with user info (try with profile join, fallback without if it fails)
+      let reviewsData = null
+      let reviewsError = null
+      
+      const { data, error } = await supabase
         .from('reviews')
         .select('*, profiles(display_name)')
         .eq('recipe_id', recipeId)
         .order('created_at', { ascending: false })
 
-      if (reviewsError) {
-        console.error('Error loading reviews:', reviewsError)
-        // If table doesn't exist, that's okay - just show empty state
-        if (reviewsError.code === '42P01') {
-          setReviews([])
-          setStats({
-            average_rating: 0,
-            total_ratings: 0,
-          })
-          setLoading(false)
-          return
+      if (error) {
+        // If join fails (RLS or table doesn't exist), try without profile join
+        if (error.code === '42P01' || error.code === 'PGRST116' || error.message?.includes('profiles')) {
+          const { data: simpleData, error: simpleError } = await supabase
+            .from('reviews')
+            .select('*')
+            .eq('recipe_id', recipeId)
+            .order('created_at', { ascending: false })
+          
+          if (simpleError) {
+            console.error('Error loading reviews:', simpleError)
+            // If table doesn't exist, that's okay
+            if (simpleError.code === '42P01') {
+              setReviews([])
+              setStats({
+                average_rating: 0,
+                total_ratings: 0,
+              })
+              setLoading(false)
+              return
+            }
+          } else {
+            reviewsData = simpleData
+          }
+        } else {
+          console.error('Error loading reviews:', error)
+          reviewsError = error
         }
-      } else if (reviewsData) {
+      } else {
+        reviewsData = data
+      }
+
+      if (reviewsData) {
         setReviews(reviewsData as Review[])
       }
 
@@ -101,7 +129,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
     }
   }
 
-  async function loadUserRating() {
+  async function loadUserRating(supabase: ReturnType<typeof createClient>) {
     if (!user) return
 
     const { data: ratingData } = await supabase
@@ -134,6 +162,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
     setSubmitting(true)
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('ratings')
         .upsert({
@@ -145,7 +174,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       if (error) throw error
 
       setUserRating(rating)
-      await loadReviews()
+      await loadReviews(supabase)
     } catch (error) {
       console.error('Error submitting rating:', error)
       alert('Failed to submit rating')
@@ -159,6 +188,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
     setSubmitting(true)
     try {
+      const supabase = createClient()
       if (userReview) {
         // Update existing review
         const { error } = await supabase
@@ -180,8 +210,8 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
         if (error) throw error
       }
 
-      await loadReviews()
-      await loadUserRating()
+      await loadReviews(supabase)
+      await loadUserRating(supabase)
     } catch (error) {
       console.error('Error submitting review:', error)
       alert('Failed to submit review')
@@ -195,6 +225,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
     if (!confirm('Delete your review?')) return
 
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from('reviews')
         .delete()
@@ -204,7 +235,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
       setUserReview(null)
       setComment('')
-      await loadReviews()
+      await loadReviews(supabase)
     } catch (error) {
       console.error('Error deleting review:', error)
       alert('Failed to delete review')
