@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
   const totalTime = recipe.prep_minutes + recipe.cook_minutes
 
   return {
-    title: `${recipe.title} | RecipeHub`,
+    title: `${recipe.title} | YumSpot`,
     description: recipe.description || `Learn how to make ${recipe.title} with our step-by-step recipe.`,
     openGraph: {
       title: recipe.title,
@@ -99,7 +99,7 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
         alt: recipe.title,
       }] : [],
       type: 'article',
-      siteName: 'RecipeHub',
+      siteName: 'YumSpot',
     },
     twitter: {
       card: 'summary_large_image',
@@ -114,7 +114,7 @@ export async function generateMetadata({ params }: RecipePageProps): Promise<Met
       'pinterest:image': recipe.cover_image_url || '',
       // Rich Pins - Article type (Pinterest reads schema.org data)
       'og:type': 'article',
-      'article:author': 'RecipeHub',
+      'article:author': 'YumSpot',
       'article:tag': recipe.tags?.join(', ') || '',
     },
   }
@@ -134,7 +134,7 @@ function generateRecipeSchema(recipe: Recipe) {
     } : undefined,
     author: {
       '@type': 'Organization',
-      name: 'RecipeHub',
+          name: 'YumSpot',
     },
     datePublished: recipe.created_at,
     prepTime: `PT${recipe.prep_minutes}M`,

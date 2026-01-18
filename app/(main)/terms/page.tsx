@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | RecipeHub',
-  description: 'Terms of Service for RecipeHub - Read our terms and conditions for using our recipe website.',
+  title: 'Terms of Service | YumSpot',
+  description: 'Terms of Service for YumSpot - Read our terms and conditions for using our recipe website.',
 }
 
 export default function TermsPage() {
@@ -15,19 +15,19 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
           <p className="text-gray-700 mb-4">
-            By accessing and using RecipeHub, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+            By accessing and using YumSpot, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">2. Use License</h2>
           <p className="text-gray-700 mb-4">
-            Permission is granted to temporarily access and use RecipeHub for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+            Permission is granted to temporarily access and use YumSpot for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
           </p>
           <ul className="list-disc pl-6 mb-4 text-gray-700 space-y-2">
             <li>Modify or copy the materials</li>
             <li>Use the materials for any commercial purpose or for any public display</li>
-            <li>Attempt to reverse engineer any software contained on RecipeHub</li>
+            <li>Attempt to reverse engineer any software contained on YumSpot</li>
             <li>Remove any copyright or other proprietary notations from the materials</li>
           </ul>
         </section>
@@ -49,21 +49,21 @@ export default function TermsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">5. User Content</h2>
           <p className="text-gray-700 mb-4">
-            By submitting content (recipes, reviews, comments) to RecipeHub, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, and display that content on our platform.
+            By submitting content (recipes, reviews, comments) to YumSpot, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, and display that content on our platform.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">6. Disclaimer</h2>
           <p className="text-gray-700 mb-4">
-            The materials on RecipeHub are provided on an 'as is' basis. RecipeHub makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+            The materials on YumSpot are provided on an 'as is' basis. YumSpot makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">7. Limitations</h2>
           <p className="text-gray-700 mb-4">
-            In no event shall RecipeHub or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on RecipeHub.
+            In no event shall YumSpot or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on YumSpot.
           </p>
         </section>
 

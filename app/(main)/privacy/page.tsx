@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | RecipeHub',
-  description: 'Privacy Policy for RecipeHub - Learn how we collect, use, and protect your personal information.',
+  title: 'Privacy Policy | YumSpot',
+  description: 'Privacy Policy for YumSpot - Learn how we collect, use, and protect your personal information.',
 }
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Introduction</h2>
           <p className="text-gray-700 mb-4">
-            Welcome to RecipeHub ("we," "our," or "us"). We are committed to protecting your privacy and ensuring you have a positive experience on our website. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.
+            Welcome to YumSpot ("we," "our," or "us"). We are committed to protecting your privacy and ensuring you have a positive experience on our website. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.
           </p>
         </section>
 

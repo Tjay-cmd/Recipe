@@ -6,7 +6,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-white font-bold text-lg mb-4">RecipeHub</h3>
+            <h3 className="text-white font-bold text-lg mb-4">YumSpot</h3>
             <p className="text-sm">
               Viral recipes you can actually cook. Join thousands of home cooks discovering amazing dishes.
             </p>
@@ -83,7 +83,7 @@ export function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} RecipeHub. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} YumSpot. All rights reserved.</p>
         </div>
       </div>
     </footer>

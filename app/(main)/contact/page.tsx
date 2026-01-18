@@ -134,9 +134,9 @@ export default function ContactPage() {
           <h2 className="text-2xl font-semibold mb-6">Get in Touch</h2>
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">About RecipeHub</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">About YumSpot</h3>
               <p className="text-gray-700">
-                RecipeHub is your destination for viral recipes you can actually cook. We provide step-by-step instructions, meal planning tools, and shopping lists to make cooking easier and more enjoyable.
+                YumSpot is your destination for viral recipes you can actually cook. We provide step-by-step instructions, meal planning tools, and shopping lists to make cooking easier and more enjoyable.
               </p>
             </div>
 

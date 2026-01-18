@@ -53,32 +53,31 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
         .order('created_at', { ascending: false })
 
       if (error) {
-        // If join fails (RLS or table doesn't exist), try without profile join
-        if (error.code === '42P01' || error.code === 'PGRST116' || error.message?.includes('profiles')) {
-          const { data: simpleData, error: simpleError } = await supabase
-            .from('reviews')
-            .select('*')
-            .eq('recipe_id', recipeId)
-            .order('created_at', { ascending: false })
-          
-          if (simpleError) {
-            console.error('Error loading reviews:', simpleError)
-            // If table doesn't exist, that's okay
-            if (simpleError.code === '42P01') {
-              setReviews([])
-              setStats({
-                average_rating: 0,
-                total_ratings: 0,
-              })
-              setLoading(false)
-              return
-            }
-          } else {
-            reviewsData = simpleData
+        // If any error (400, RLS, table missing, etc.), try without profile join
+        console.warn('Error with profiles join, trying without:', error)
+        
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('reviews')
+          .select('*')
+          .eq('recipe_id', recipeId)
+          .order('created_at', { ascending: false })
+        
+        if (simpleError) {
+          console.error('Error loading reviews (fallback failed):', simpleError)
+          // If table doesn't exist (42P01), that's okay - just show empty state
+          if (simpleError.code === '42P01') {
+            setReviews([])
+            setStats({
+              average_rating: 0,
+              total_ratings: 0,
+            })
+            setLoading(false)
+            return
           }
+          // For any other error, still set empty state to prevent crashes
+          setReviews([])
         } else {
-          console.error('Error loading reviews:', error)
-          reviewsError = error
+          reviewsData = simpleData
         }
       } else {
         reviewsData = data
@@ -96,13 +95,11 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
       if (ratingsError) {
         console.error('Error loading ratings:', ratingsError)
-        // If table doesn't exist, set empty stats
-        if (ratingsError.code === '42P01') {
-          setStats({
-            average_rating: 0,
-            total_ratings: 0,
-          })
-        }
+        // If table doesn't exist or any error, set empty stats
+        setStats({
+          average_rating: 0,
+          total_ratings: 0,
+        })
       } else if (ratingsData && ratingsData.length > 0) {
         const total = ratingsData.reduce((sum, r) => sum + r.rating, 0)
         const average = total / ratingsData.length
