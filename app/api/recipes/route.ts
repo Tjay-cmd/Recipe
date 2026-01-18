@@ -84,17 +84,36 @@ export async function GET(request: NextRequest) {
     query = query.contains('tags', [tag])
   }
 
+  // Difficulty filter
+  const difficulty = searchParams.get('difficulty')
+  if (difficulty) {
+    query = query.eq('difficulty', difficulty)
+  }
+
   // Sorting
   const sort = searchParams.get('sort') || 'newest'
   if (sort === 'trending') {
     query = query.order('views', { ascending: false })
+  } else if (sort === 'time_asc') {
+    // Sort by total time ascending (prep + cook)
+    query = query.order('prep_minutes', { ascending: true })
+    query = query.order('cook_minutes', { ascending: true })
+  } else if (sort === 'time_desc') {
+    // Sort by total time descending
+    query = query.order('prep_minutes', { ascending: false })
+    query = query.order('cook_minutes', { ascending: false })
   } else {
+    // 'newest' or 'rating' (rating will be calculated after fetch)
     query = query.order('created_at', { ascending: false })
   }
 
-  // Pagination
+  // Pagination (fetch more if we need to filter/sort)
   const limit = parseInt(searchParams.get('limit') || '50')
-  query = query.limit(limit)
+  const maxTime = searchParams.get('max_time')
+  const needsPostProcessing = maxTime || sort === 'rating'
+  
+  // Fetch more recipes if we need to filter/sort in memory
+  query = query.limit(needsPostProcessing ? limit * 2 : limit)
 
   const { data, error } = await query
 
@@ -102,7 +121,48 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ recipes: data || [] })
+  let recipes = data || []
+
+  // Apply max_time filter if needed
+  if (maxTime) {
+    const maxMinutes = parseInt(maxTime)
+    recipes = recipes.filter(recipe => (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0) <= maxMinutes)
+  }
+
+  // Sort by rating if needed (calculate average ratings)
+  if (sort === 'rating') {
+    // Get ratings for all recipes
+    const recipeIds = recipes.map(r => r.id)
+    
+    if (recipeIds.length > 0) {
+      const { data: ratingsData } = await supabase
+        .from('ratings')
+        .select('recipe_id, rating')
+        .in('recipe_id', recipeIds)
+
+      // Calculate average rating per recipe
+      const ratingsMap: Record<string, { sum: number; count: number }> = {}
+      ratingsData?.forEach(rating => {
+        if (!ratingsMap[rating.recipe_id]) {
+          ratingsMap[rating.recipe_id] = { sum: 0, count: 0 }
+        }
+        ratingsMap[rating.recipe_id].sum += rating.rating
+        ratingsMap[rating.recipe_id].count += 1
+      })
+
+      // Sort recipes by average rating
+      recipes = recipes.sort((a, b) => {
+        const aRating = ratingsMap[a.id] ? ratingsMap[a.id].sum / ratingsMap[a.id].count : 0
+        const bRating = ratingsMap[b.id] ? ratingsMap[b.id].sum / ratingsMap[b.id].count : 0
+        return bRating - aRating
+      })
+    }
+  }
+
+  // Limit after filtering/sorting
+  recipes = recipes.slice(0, limit)
+
+  return NextResponse.json({ recipes })
 }
 
 export async function POST(request: NextRequest) {

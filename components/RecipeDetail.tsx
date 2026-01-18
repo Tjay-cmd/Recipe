@@ -7,6 +7,7 @@ import { SaveButton } from './SaveButton'
 import { PinterestShareButton } from './PinterestShareButton'
 import { AddToShoppingListButton } from './AddToShoppingListButton'
 import { NutritionFacts } from './NutritionFacts'
+import { AdSense } from './AdSense'
 import { formatTime } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -139,6 +140,14 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
       {/* Nutrition Facts */}
       <NutritionFacts recipe={recipe} isSubscribed={isSubscribed} />
 
+      {/* Ad 1: Between Ingredients and Steps (High Engagement) */}
+      <div className="my-8 flex justify-center print:hidden">
+        <AdSense 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_1 || '1234567890'} 
+          className="max-w-full"
+        />
+      </div>
+
       {/* Steps */}
       <section id="steps" className="mb-12 scroll-mt-20">
         <h2 className="text-2xl font-bold mb-4">Instructions</h2>
@@ -169,6 +178,14 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
           </div>
         )}
       </section>
+
+      {/* Ad 2: After Steps (When users finish reading) */}
+      <div className="my-8 flex justify-center print:hidden">
+        <AdSense 
+          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_2 || '1234567890'} 
+          className="max-w-full"
+        />
+      </div>
 
       {/* Tags */}
       {recipe.tags && recipe.tags.length > 0 && (

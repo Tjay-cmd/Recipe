@@ -86,3 +86,30 @@ export type MealPlan = {
   notes: string | null
   created_at: string
 }
+
+export type Rating = {
+  id: string
+  user_id: string
+  recipe_id: string
+  rating: number // 1-5
+  created_at: string
+  updated_at: string
+}
+
+export type Review = {
+  id: string
+  user_id: string
+  recipe_id: string
+  comment: string
+  created_at: string
+  updated_at: string
+  profiles?: {
+    display_name: string | null
+  }
+}
+
+export type RecipeRatingStats = {
+  average_rating: number
+  total_ratings: number
+  user_rating?: number | null
+}

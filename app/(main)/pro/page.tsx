@@ -32,6 +32,11 @@ const FEATURES = [
     description: 'Beautiful print-friendly layouts for offline cooking',
     icon: '🖨️',
   },
+  {
+    title: 'Ad-Free Experience',
+    description: 'Enjoy recipes without any advertisements',
+    icon: '✨',
+  },
 ]
 
 export default function ProPage() {
@@ -116,8 +121,13 @@ export default function ProPage() {
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>
-              <tr>
+              <tr className="border-b">
                 <td className="py-4 px-4">Recipe Collections</td>
+                <td className="text-center py-4 px-4">—</td>
+                <td className="text-center py-4 px-4">✓</td>
+              </tr>
+              <tr>
+                <td className="py-4 px-4">Ad-Free Experience</td>
                 <td className="text-center py-4 px-4">—</td>
                 <td className="text-center py-4 px-4">✓</td>
               </tr>

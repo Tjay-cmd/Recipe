@@ -28,6 +28,12 @@ export default function RootLayout({
         {process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION && (
           <meta name="p:domain_verify" content={process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION} />
         )}
+        {/* Google AdSense Verification - Required for site verification */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7017941957735249"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className={inter.className}>
         <Header />

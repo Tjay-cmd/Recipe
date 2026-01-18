@@ -3,6 +3,7 @@ import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { RecipeDetail } from '@/components/RecipeDetail'
 import { RelatedRecipes } from '@/components/RelatedRecipes'
+import { ReviewSection } from '@/components/ReviewSection'
 import { CookMode } from '@/components/CookMode'
 import { incrementRecipeViews } from '@/app/actions'
 import { Recipe } from '@/types/database'
@@ -184,6 +185,9 @@ export default async function RecipePage({ params }: RecipePageProps) {
         <CookMode>
           <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
         </CookMode>
+        
+        {/* Ratings & Reviews */}
+        <ReviewSection recipeId={recipe.id} />
         
         {/* Related Recipes */}
         <RelatedRecipes currentRecipe={recipe} />

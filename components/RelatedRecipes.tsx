@@ -20,16 +20,26 @@ export function RelatedRecipes({ currentRecipe }: RelatedRecipesProps) {
     try {
       // Fetch recipes with matching tags
       const response = await fetch('/api/recipes?limit=50')
+      
+      if (!response.ok) {
+        console.error('Failed to fetch recipes:', response.statusText)
+        setRelatedRecipes([])
+        setLoading(false)
+        return
+      }
+      
       const data = await response.json()
       
-      if (data.recipes) {
+      if (data.recipes && Array.isArray(data.recipes)) {
         // Filter and score recipes by tag overlap
+        const currentTags = currentRecipe.tags || []
         const scored = data.recipes
           .filter((recipe: Recipe) => recipe.id !== currentRecipe.id) // Exclude current recipe
           .map((recipe: Recipe) => {
-            // Count matching tags
-            const matchingTags = recipe.tags.filter(tag => 
-              currentRecipe.tags.includes(tag)
+            // Count matching tags (handle null/undefined tags)
+            const recipeTags = recipe.tags || []
+            const matchingTags = recipeTags.filter(tag => 
+              currentTags.includes(tag)
             ).length
             
             return { recipe, score: matchingTags }
@@ -40,9 +50,13 @@ export function RelatedRecipes({ currentRecipe }: RelatedRecipesProps) {
           .map((item: { recipe: Recipe; score: number }) => item.recipe)
 
         setRelatedRecipes(scored)
+      } else {
+        console.error('Invalid response format:', data)
+        setRelatedRecipes([])
       }
     } catch (error) {
       console.error('Error loading related recipes:', error)
+      setRelatedRecipes([])
     } finally {
       setLoading(false)
     }
