@@ -22,23 +22,32 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
   useEffect(() => {
     const supabase = createClient()
+    let mounted = true
     
     async function init() {
-      await checkUser(supabase)
-      await loadReviews(supabase)
+      // Load user and reviews in parallel
+      const [userResult] = await Promise.all([
+        supabase.auth.getUser(),
+        loadReviews(supabase)
+      ])
+      
+      if (!mounted) return
+      
+      const fetchedUser = userResult.data.user
+      setUser(fetchedUser)
+      
+      // Load user rating if user exists
+      if (fetchedUser) {
+        await loadUserRating(supabase, fetchedUser.id)
+      }
     }
     
     init()
-  }, [recipeId])
-
-  async function checkUser(supabase: ReturnType<typeof createClient>) {
-    const { data: { user } } = await supabase.auth.getUser()
-    setUser(user)
     
-    if (user) {
-      loadUserRating(supabase)
+    return () => {
+      mounted = false
     }
-  }
+  }, [recipeId])
 
   async function loadReviews(supabase: ReturnType<typeof createClient>) {
     try {
@@ -116,14 +125,12 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
     }
   }
 
-  async function loadUserRating(supabase: ReturnType<typeof createClient>) {
-    if (!user) return
-
+  async function loadUserRating(supabase: ReturnType<typeof createClient>, userId: string) {
     const { data: ratingData } = await supabase
       .from('ratings')
       .select('rating')
       .eq('recipe_id', recipeId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle()
 
     if (ratingData) {
@@ -135,7 +142,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       .from('reviews')
       .select('*')
       .eq('recipe_id', recipeId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .maybeSingle()
 
     if (reviewData) {
@@ -198,7 +205,9 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       }
 
       await loadReviews(supabase)
-      await loadUserRating(supabase)
+      if (user) {
+        await loadUserRating(supabase, user.id)
+      }
     } catch (error) {
       console.error('Error submitting review:', error)
       alert('Failed to submit review')
