@@ -24,33 +24,8 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
     const supabase = createClient()
     let mounted = true
     
-    async function init() {
-      // Load user and reviews in parallel
-      const [userResult] = await Promise.all([
-        supabase.auth.getUser(),
-        loadReviews(supabase)
-      ])
-      
-      if (!mounted) return
-      
-      const fetchedUser = userResult.data.user
-      setUser(fetchedUser)
-      
-      // Load user rating if user exists
-      if (fetchedUser) {
-        await loadUserRating(supabase, fetchedUser.id)
-      }
-    }
-    
-    init()
-    
-    return () => {
-      mounted = false
-    }
-  }, [recipeId])
-
-  async function loadReviews(supabase: ReturnType<typeof createClient>) {
-    try {
+    async function loadReviews() {
+      try {
       // Load reviews without profile join (no foreign key relationship exists)
       // This works for both logged-in and logged-out users
       const { data: reviewsData, error: reviewsError } = await supabase
@@ -123,33 +98,62 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function loadUserRating(supabase: ReturnType<typeof createClient>, userId: string) {
-    const { data: ratingData } = await supabase
-      .from('ratings')
-      .select('rating')
-      .eq('recipe_id', recipeId)
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    if (ratingData) {
-      setUserRating(ratingData.rating)
-      setRating(ratingData.rating)
     }
+    
+    async function loadUserRating(userId: string) {
+      const { data: ratingData } = await supabase
+        .from('ratings')
+        .select('rating')
+        .eq('recipe_id', recipeId)
+        .eq('user_id', userId)
+        .maybeSingle()
 
-    const { data: reviewData } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('recipe_id', recipeId)
-      .eq('user_id', userId)
-      .maybeSingle()
+      if (!mounted) return
 
-    if (reviewData) {
-      setUserReview(reviewData as Review)
-      setComment(reviewData.comment)
+      if (ratingData) {
+        setUserRating(ratingData.rating)
+        setRating(ratingData.rating)
+      }
+
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('recipe_id', recipeId)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (!mounted) return
+
+      if (reviewData) {
+        setUserReview(reviewData as Review)
+        setComment(reviewData.comment)
+      }
     }
-  }
+    
+    async function init() {
+      // Load user and reviews in parallel
+      const [userResult] = await Promise.all([
+        supabase.auth.getUser(),
+        loadReviews()
+      ])
+      
+      if (!mounted) return
+      
+      const fetchedUser = userResult.data.user
+      setUser(fetchedUser)
+      
+      // Load user rating if user exists
+      if (fetchedUser) {
+        await loadUserRating(fetchedUser.id)
+      }
+    }
+    
+    init()
+    
+    return () => {
+      mounted = false
+    }
+  }, [recipeId])
 
   async function submitRating() {
     if (!user || !rating) return
@@ -168,7 +172,25 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       if (error) throw error
 
       setUserRating(rating)
-      await loadReviews(supabase)
+      // Reload reviews and ratings
+      const [reviewsData, ratingsData] = await Promise.all([
+        supabase.from('reviews').select('*').eq('recipe_id', recipeId).order('created_at', { ascending: false }),
+        supabase.from('ratings').select('rating').eq('recipe_id', recipeId)
+      ])
+
+      if (reviewsData.data) {
+        const reviewsWithProfiles = reviewsData.data.map((review: any) => ({
+          ...review,
+          profiles: { display_name: null }
+        }))
+        setReviews(reviewsWithProfiles as Review[])
+      }
+
+      if (ratingsData.data && ratingsData.data.length > 0) {
+        const total = ratingsData.data.reduce((sum: number, r: any) => sum + r.rating, 0)
+        const average = total / ratingsData.data.length
+        setStats({ average_rating: average, total_ratings: ratingsData.data.length })
+      }
     } catch (error) {
       console.error('Error submitting rating:', error)
       alert('Failed to submit rating')
@@ -204,9 +226,29 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
         if (error) throw error
       }
 
-      await loadReviews(supabase)
-      if (user) {
-        await loadUserRating(supabase, user.id)
+      // Reload reviews and user rating
+      const [reviewsData, ratingData, reviewData] = await Promise.all([
+        supabase.from('reviews').select('*').eq('recipe_id', recipeId).order('created_at', { ascending: false }),
+        supabase.from('ratings').select('rating').eq('recipe_id', recipeId).eq('user_id', user.id).maybeSingle(),
+        supabase.from('reviews').select('*').eq('recipe_id', recipeId).eq('user_id', user.id).maybeSingle()
+      ])
+
+      if (reviewsData.data) {
+        const reviewsWithProfiles = reviewsData.data.map((review: any) => ({
+          ...review,
+          profiles: { display_name: null }
+        }))
+        setReviews(reviewsWithProfiles as Review[])
+      }
+
+      if (ratingData.data) {
+        setUserRating(ratingData.data.rating)
+        setRating(ratingData.data.rating)
+      }
+
+      if (reviewData.data) {
+        setUserReview(reviewData.data as Review)
+        setComment(reviewData.data.comment)
       }
     } catch (error) {
       console.error('Error submitting review:', error)
@@ -231,7 +273,20 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
 
       setUserReview(null)
       setComment('')
-      await loadReviews(supabase)
+      // Reload reviews
+      const { data: reviewsData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('recipe_id', recipeId)
+        .order('created_at', { ascending: false })
+
+      if (reviewsData) {
+        const reviewsWithProfiles = reviewsData.map((review: any) => ({
+          ...review,
+          profiles: { display_name: null }
+        }))
+        setReviews(reviewsWithProfiles as Review[])
+      }
     } catch (error) {
       console.error('Error deleting review:', error)
       alert('Failed to delete review')
