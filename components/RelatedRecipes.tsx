@@ -34,10 +34,10 @@ export function RelatedRecipes({ currentRecipe }: RelatedRecipesProps) {
             
             return { recipe, score: matchingTags }
           })
-          .filter(item => item.score > 0) // Only recipes with at least 1 matching tag
-          .sort((a, b) => b.score - a.score) // Sort by most matching tags
+          .filter((item: { recipe: Recipe; score: number }) => item.score > 0) // Only recipes with at least 1 matching tag
+          .sort((a: { recipe: Recipe; score: number }, b: { recipe: Recipe; score: number }) => b.score - a.score) // Sort by most matching tags
           .slice(0, 4) // Take top 4
-          .map(item => item.recipe)
+          .map((item: { recipe: Recipe; score: number }) => item.recipe)
 
         setRelatedRecipes(scored)
       }
