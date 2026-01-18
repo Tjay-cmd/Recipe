@@ -321,23 +321,23 @@ export function MealPlanner() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 sm:px-0">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Meal Planner</h1>
-        <p className="text-gray-600">Plan your weekly meals and stay organized!</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Meal Planner</h1>
+        <p className="text-sm sm:text-base text-gray-600">Plan your weekly meals and stay organized!</p>
       </div>
 
       {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <button
           onClick={previousWeek}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
         >
           ← Previous
         </button>
         
         <div className="text-center">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-lg sm:text-xl font-semibold">
             {currentWeekStart.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} -{' '}
             {weekDays[6].toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </h2>
@@ -351,7 +351,7 @@ export function MealPlanner() {
 
         <button
           onClick={nextWeek}
-          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
         >
           Next →
         </button>
@@ -362,7 +362,7 @@ export function MealPlanner() {
         <div className="mb-6 flex justify-end">
           <button
             onClick={generateShoppingList}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -372,8 +372,85 @@ export function MealPlanner() {
         </div>
       )}
 
-      {/* Calendar Grid */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Mobile View - Card Layout */}
+      <div className="md:hidden space-y-4">
+        {weekDays.map((date, i) => {
+          const dateStr = formatDate(date)
+          const isToday = dateStr === formatDate(new Date())
+          const allMealsForDate = mealPlans.filter(mp => mp.planned_date === dateStr)
+          
+          return (
+            <div
+              key={i}
+              className={`bg-white rounded-lg shadow-sm border-2 ${
+                isToday ? 'border-emerald-500' : 'border-gray-200'
+              } overflow-hidden`}
+            >
+              <div className={`p-4 ${isToday ? 'bg-emerald-50' : 'bg-gray-50'}`}>
+                <div className="font-semibold text-gray-900">
+                  {date.toLocaleDateString('en-US', { weekday: 'long' })}
+                </div>
+                <div className={`text-sm ${isToday ? 'text-emerald-600' : 'text-gray-500'}`}>
+                  {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+                  {isToday && <span className="ml-2 text-emerald-600 font-semibold">• Today</span>}
+                </div>
+              </div>
+              
+              <div className="p-4 space-y-4">
+                {mealTypes.map((mealType) => {
+                  const meals = getMealPlansForDate(date, mealType)
+                  return (
+                    <div key={mealType} className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-700 capitalize">{mealType}</h3>
+                        <button
+                          onClick={() => {
+                            setSelectedDate(dateStr)
+                            setSelectedMealType(mealType)
+                            setShowAddModal(true)
+                          }}
+                          className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                      {meals.length > 0 ? (
+                        <div className="space-y-2">
+                          {meals.map((meal) => (
+                            <div
+                              key={meal.id}
+                              className="p-2 bg-emerald-100 rounded text-sm group relative"
+                            >
+                              <Link
+                                href={`/recipes/${meal.recipes.slug}`}
+                                className="text-emerald-800 hover:text-emerald-900 font-medium block pr-6"
+                              >
+                                {meal.recipes.title}
+                              </Link>
+                              <button
+                                onClick={() => deleteMealPlan(meal.id)}
+                                className="absolute top-1 right-1 text-red-600 hover:text-red-700 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                                aria-label="Remove meal"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-400">No {mealType} planned</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Desktop View - Table Layout */}
+      <div className="hidden md:block bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="grid grid-cols-8 border-b border-gray-200">
           <div className="p-4 bg-gray-50 font-medium text-gray-700 border-r border-gray-200">
             Meal

@@ -13,6 +13,14 @@ export type Recipe = {
   tags: string[]
   is_pro: boolean
   views: number
+  calories: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+  fiber_g: number | null
+  sugar_g: number | null
+  sodium_mg: number | null
+  cholesterol_mg: number | null
   created_at: string
   updated_at: string
 }

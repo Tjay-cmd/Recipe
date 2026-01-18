@@ -54,8 +54,14 @@ async function checkIsSubscribed(): Promise<boolean> {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
+  if (!user || !user.email) {
     return false
+  }
+
+  // Check if user is admin (admins get Pro access automatically)
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
+  if (adminEmails.includes(user.email)) {
+    return true
   }
 
   const { data } = await supabase

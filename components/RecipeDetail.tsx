@@ -4,6 +4,7 @@ import { ProBadge } from './ProBadge'
 import { SaveButton } from './SaveButton'
 import { PinterestShareButton } from './PinterestShareButton'
 import { AddToShoppingListButton } from './AddToShoppingListButton'
+import { NutritionFacts } from './NutritionFacts'
 import { formatTime } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -113,12 +114,15 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
         <ul className="space-y-2">
           {recipe.ingredients.map((ingredient, index) => (
             <li key={index} className="flex items-start gap-3">
-              <span className="text-orange-500 mt-1">•</span>
+              <span className="text-emerald-500 mt-1">•</span>
               <span>{ingredient}</span>
             </li>
           ))}
         </ul>
       </section>
+
+      {/* Nutrition Facts */}
+      <NutritionFacts recipe={recipe} isSubscribed={isSubscribed} />
 
       {/* Steps */}
       <section id="steps" className="mb-12 scroll-mt-20">
@@ -127,7 +131,7 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
           <ol className="space-y-4">
             {recipe.steps.map((step, index) => (
               <li key={index} className="flex gap-4">
-                <span className="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-semibold">
+                <span className="flex-shrink-0 w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-semibold">
                   {index + 1}
                 </span>
                 <span className="flex-1 pt-1">{step}</span>
@@ -135,7 +139,7 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
             ))}
           </ol>
         ) : (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
             <h3 className="text-xl font-semibold mb-2">Pro Recipe</h3>
             <p className="mb-4 text-gray-700">
               This recipe is available to Pro members. Upgrade to get access to step-by-step instructions,
@@ -143,7 +147,7 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
             </p>
             <Link
               href="/pro"
-              className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+              className="inline-block px-6 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors"
             >
               Upgrade to Pro
             </Link>

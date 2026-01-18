@@ -20,6 +20,14 @@ interface RecipeFormData {
   difficulty: 'Easy' | 'Medium' | 'Hard' | ''
   tags: string
   is_pro: boolean
+  calories: string
+  protein_g: string
+  carbs_g: string
+  fat_g: string
+  fiber_g: string
+  sugar_g: string
+  sodium_mg: string
+  cholesterol_mg: string
 }
 
 interface AdminRecipeFormProps {
@@ -44,6 +52,14 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
     difficulty: '',
     tags: '',
     is_pro: false,
+    calories: '',
+    protein_g: '',
+    carbs_g: '',
+    fat_g: '',
+    fiber_g: '',
+    sugar_g: '',
+    sodium_mg: '',
+    cholesterol_mg: '',
   })
 
   // Load recipe data when editing
@@ -62,6 +78,14 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
         difficulty: recipe.difficulty as 'Easy' | 'Medium' | 'Hard' | '' || '',
         tags: Array.isArray(recipe.tags) ? recipe.tags.join(', ') : '',
         is_pro: recipe.is_pro || false,
+        calories: recipe.calories?.toString() || '',
+        protein_g: recipe.protein_g?.toString() || '',
+        carbs_g: recipe.carbs_g?.toString() || '',
+        fat_g: recipe.fat_g?.toString() || '',
+        fiber_g: recipe.fiber_g?.toString() || '',
+        sugar_g: recipe.sugar_g?.toString() || '',
+        sodium_mg: recipe.sodium_mg?.toString() || '',
+        cholesterol_mg: recipe.cholesterol_mg?.toString() || '',
       })
     }
   }, [recipe])
@@ -151,6 +175,55 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
     }
   }
 
+  function handleBulkPasteNutrition(text: string) {
+    // Parse ChatGPT nutrition format: "Calories: 520" or "Calories - 520" or "Calories = 520"
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    
+    const updates: Partial<RecipeFormData> = {}
+    
+    lines.forEach(line => {
+      // Remove bullet points
+      line = line.replace(/^[•\-\*]\s*/, '').trim()
+      
+      // Match pattern: "Field Name: value" or "Field Name - value" or "Field Name = value"
+      const match = line.match(/^(.+?)[:\-\=]\s*(.+)$/i)
+      
+      if (!match) return
+      
+      const fieldName = match[1].trim().toLowerCase()
+      const value = match[2].trim()
+      
+      // Extract numeric value (can have decimals)
+      const numMatch = value.match(/[\d.]+/)
+      if (!numMatch) return
+      
+      const numValue = numMatch[0]
+      
+      // Match field names (case insensitive, flexible matching)
+      if (fieldName.includes('calorie')) {
+        updates.calories = numValue
+      } else if (fieldName.includes('protein')) {
+        updates.protein_g = numValue
+      } else if (fieldName.includes('carbohydrate') || fieldName.includes('carb')) {
+        updates.carbs_g = numValue
+      } else if (fieldName.includes('fat') && !fieldName.includes('saturated')) {
+        updates.fat_g = numValue
+      } else if (fieldName.includes('fiber')) {
+        updates.fiber_g = numValue
+      } else if (fieldName.includes('sugar')) {
+        updates.sugar_g = numValue
+      } else if (fieldName.includes('sodium')) {
+        updates.sodium_mg = numValue
+      } else if (fieldName.includes('cholesterol')) {
+        updates.cholesterol_mg = numValue
+      }
+    })
+    
+    if (Object.keys(updates).length > 0) {
+      setFormData({ ...formData, ...updates })
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -176,7 +249,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
     }
 
     // Prepare data
-    const recipeData = {
+    const recipeData: any = {
       title: formData.title,
       slug: formData.slug,
       description: formData.description || null,
@@ -192,6 +265,14 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
         .map((t) => t.trim())
         .filter(Boolean),
       is_pro: formData.is_pro,
+      calories: formData.calories ? parseInt(formData.calories) : null,
+      protein_g: formData.protein_g ? parseFloat(formData.protein_g) : null,
+      carbs_g: formData.carbs_g ? parseFloat(formData.carbs_g) : null,
+      fat_g: formData.fat_g ? parseFloat(formData.fat_g) : null,
+      fiber_g: formData.fiber_g ? parseFloat(formData.fiber_g) : null,
+      sugar_g: formData.sugar_g ? parseFloat(formData.sugar_g) : null,
+      sodium_mg: formData.sodium_mg ? parseFloat(formData.sodium_mg) : null,
+      cholesterol_mg: formData.cholesterol_mg ? parseFloat(formData.cholesterol_mg) : null,
     }
 
     try {
@@ -510,6 +591,159 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
         <label htmlFor="is_pro" className="ml-2 text-sm font-medium text-gray-700">
           Pro Recipe (requires subscription)
         </label>
+      </div>
+
+      {/* Nutritional Information */}
+      <div className="border-t border-gray-200 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold text-gray-900">Nutritional Information (Optional)</h4>
+          <details className="relative">
+            <summary className="cursor-pointer text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+              📋 Bulk Paste from ChatGPT
+            </summary>
+            <div className="absolute right-0 mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-10">
+              <p className="text-xs text-gray-600 mb-2">
+                Paste nutrition from ChatGPT (one per line):
+              </p>
+              <textarea
+                placeholder="Calories: 520&#10;Protein (g): 38.0&#10;Carbohydrates (g): 32.0&#10;Fat (g): 24.0&#10;Fiber (g): 4.0&#10;Sugar (g): 7.0&#10;Sodium (mg): 780.0&#10;Cholesterol (mg): 125.0"
+                rows={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                onBlur={(e) => {
+                  if (e.target.value.trim()) {
+                    handleBulkPasteNutrition(e.target.value)
+                    e.target.value = ''
+                  }
+                }}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Tip: Copy exactly from ChatGPT and paste here! Supports formats like "Calories: 520" or "Calories - 520"
+              </p>
+            </div>
+          </details>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">Per serving. Leave blank if not available.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Calories
+            </label>
+            <input
+              type="number"
+              value={formData.calories}
+              onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
+              placeholder="250"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Protein (g)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.protein_g}
+              onChange={(e) => setFormData({ ...formData, protein_g: e.target.value })}
+              placeholder="25.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Carbohydrates (g)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.carbs_g}
+              onChange={(e) => setFormData({ ...formData, carbs_g: e.target.value })}
+              placeholder="30.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fat (g)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.fat_g}
+              onChange={(e) => setFormData({ ...formData, fat_g: e.target.value })}
+              placeholder="10.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Fiber (g)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.fiber_g}
+              onChange={(e) => setFormData({ ...formData, fiber_g: e.target.value })}
+              placeholder="5.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sugar (g)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.sugar_g}
+              onChange={(e) => setFormData({ ...formData, sugar_g: e.target.value })}
+              placeholder="8.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sodium (mg)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.sodium_mg}
+              onChange={(e) => setFormData({ ...formData, sodium_mg: e.target.value })}
+              placeholder="400.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Cholesterol (mg)
+            </label>
+            <input
+              type="number"
+              step="0.1"
+              value={formData.cholesterol_mg}
+              onChange={(e) => setFormData({ ...formData, cholesterol_mg: e.target.value })}
+              placeholder="50.0"
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
       </div>
 
       <button

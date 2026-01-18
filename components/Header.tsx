@@ -64,9 +64,14 @@ export function Header() {
                   Account
                 </Link>
                 {isAdmin && (
-                  <Link href="/admin" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
-                    Admin
-                  </Link>
+                  <>
+                    <Link href="/admin" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+                      Admin
+                    </Link>
+                    <Link href="/admin/analytics" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+                      Analytics
+                    </Link>
+                  </>
                 )}
                 <SignOutButton />
               </>
@@ -144,13 +149,22 @@ export function Header() {
                     Account
                   </Link>
                   {isAdmin && (
-                    <Link
-                      href="/admin"
-                      className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors px-4 py-2"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Admin
-                    </Link>
+                    <>
+                      <Link
+                        href="/admin"
+                        className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors px-4 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin
+                      </Link>
+                      <Link
+                        href="/admin/analytics"
+                        className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors px-4 py-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Analytics
+                      </Link>
+                    </>
                   )}
                   <div className="px-4">
                     <SignOutButton />
