@@ -38,11 +38,15 @@ export function MealPlanner() {
       const weekEnd = new Date(currentWeekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
 
-      const response = await fetch(
-        `/api/meal-plans?start_date=${formatDate(currentWeekStart)}&end_date=${formatDate(weekEnd)}`
-      )
-      const data = await response.json()
-      setMealPlans(data.meal_plans || [])
+      const { data, error } = await supabase
+        .from('meal_plans')
+        .select('*, recipes(*)')
+        .gte('planned_date', formatDate(currentWeekStart))
+        .lte('planned_date', formatDate(weekEnd))
+        .order('planned_date', { ascending: true })
+
+      if (error) throw error
+      setMealPlans(data || [])
     } catch (error) {
       console.error('Error loading meal plans:', error)
     } finally {
@@ -52,9 +56,20 @@ export function MealPlanner() {
 
   async function loadRecipes() {
     try {
-      const response = await fetch('/api/recipes?limit=100')
-      const data = await response.json()
-      setRecipes(data.recipes || [])
+      // Load only favorited/saved recipes
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('recipe_id, recipes(*)')
+        .eq('user_id', user.id)
+
+      if (error) throw error
+      
+      // Extract the recipes from the favorites
+      const favoriteRecipes = data?.map(fav => fav.recipes).filter(Boolean) || []
+      setRecipes(favoriteRecipes)
     } catch (error) {
       console.error('Error loading recipes:', error)
     }
@@ -64,23 +79,26 @@ export function MealPlanner() {
     if (!selectedRecipe || !selectedDate) return
 
     try {
-      const response = await fetch('/api/meal-plans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const { error } = await supabase
+        .from('meal_plans')
+        .insert({
+          user_id: user.id,
           recipe_id: selectedRecipe,
           planned_date: selectedDate,
           meal_type: selectedMealType,
-        }),
-      })
+        })
 
-      if (response.ok) {
-        await loadMealPlans()
-        setShowAddModal(false)
-        setSelectedRecipe('')
-      }
+      if (error) throw error
+
+      await loadMealPlans()
+      setShowAddModal(false)
+      setSelectedRecipe('')
     } catch (error) {
       console.error('Error adding meal plan:', error)
+      alert('Failed to add meal')
     }
   }
 
@@ -88,11 +106,179 @@ export function MealPlanner() {
     if (!confirm('Remove this meal from your plan?')) return
 
     try {
-      await fetch(`/api/meal-plans?id=${id}`, { method: 'DELETE' })
+      const { error } = await supabase
+        .from('meal_plans')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
       await loadMealPlans()
     } catch (error) {
       console.error('Error deleting meal plan:', error)
+      alert('Failed to remove meal')
     }
+  }
+
+  async function generateShoppingList() {
+    if (mealPlans.length === 0) {
+      alert('No meals planned this week!')
+      return
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      // Collect all ingredients with quantities
+      interface ParsedIngredient {
+        quantity: number
+        unit: string
+        name: string
+        originalRecipe: string
+      }
+
+      const allIngredients: ParsedIngredient[] = []
+
+      mealPlans.forEach(mp => {
+        mp.recipes.ingredients.forEach((ingredient: string) => {
+          const parsed = parseIngredient(ingredient)
+          allIngredients.push({
+            ...parsed,
+            originalRecipe: mp.recipes.title
+          })
+        })
+      })
+
+      // Group by ingredient name and unit, sum quantities
+      const consolidated: Record<string, { quantity: number; unit: string; name: string }> = {}
+
+      allIngredients.forEach(({ quantity, unit, name }) => {
+        const key = `${name.toLowerCase()}|${unit.toLowerCase()}`
+        
+        if (!consolidated[key]) {
+          consolidated[key] = { quantity, unit, name }
+        } else {
+          consolidated[key].quantity += quantity
+        }
+      })
+
+      // Convert to shopping list items with smart unit conversion
+      const items = Object.values(consolidated).map(({ quantity, unit, name }) => {
+        const { displayQuantity, displayUnit } = convertToLargerUnit(quantity, unit)
+        
+        return {
+          text: `${displayQuantity} ${displayUnit} ${name}`,
+          checked: false,
+        }
+      }).sort((a, b) => a.text.localeCompare(b.text))
+
+      // Create shopping list
+      const weekStart = currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      const weekEnd = weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .insert({
+          user_id: user.id,
+          name: `Week of ${weekStart} - ${weekEnd}`,
+          items: items,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      alert(`✅ Shopping list created with ${items.length} consolidated items!`)
+    } catch (error) {
+      console.error('Error generating shopping list:', error)
+      alert('Failed to generate shopping list')
+    }
+  }
+
+  function parseIngredient(ingredient: string): { quantity: number; unit: string; name: string } {
+    // Common patterns: "2 cups flour", "500 g chicken", "1.5 kg beef", "2-3 onions"
+    const patterns = [
+      // With unit: "2 cups flour", "500g chicken"
+      /^(\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?)\s*(kg|g|lbs?|oz|ml|l|liters?|cups?|tbsp|tsp|teaspoons?|tablespoons?)\s+(.+)$/i,
+      // Just number: "2 onions", "3 eggs"
+      /^(\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?)\s+(.+)$/,
+    ]
+
+    for (const pattern of patterns) {
+      const match = ingredient.match(pattern)
+      if (match) {
+        let quantity = parseFloat(match[1].split('-')[0]) // Take first number if range
+        const hasUnit = match.length === 4
+        
+        if (hasUnit) {
+          let unit = match[2].toLowerCase()
+          let name = match[3].trim()
+          
+          // Normalize units
+          unit = normalizeUnit(unit)
+          
+          return { quantity, unit, name }
+        } else {
+          // No unit, just count
+          let name = match[2].trim()
+          return { quantity, unit: 'whole', name }
+        }
+      }
+    }
+
+    // No quantity found, treat as 1 whole item
+    return { quantity: 1, unit: 'whole', name: ingredient.trim() }
+  }
+
+  function normalizeUnit(unit: string): string {
+    const normalized: Record<string, string> = {
+      'cup': 'cups',
+      'tbsp': 'tbsp',
+      'tablespoon': 'tbsp',
+      'tablespoons': 'tbsp',
+      'tsp': 'tsp',
+      'teaspoon': 'tsp',
+      'teaspoons': 'tsp',
+      'g': 'g',
+      'gram': 'g',
+      'grams': 'g',
+      'kg': 'kg',
+      'kilogram': 'kg',
+      'kilograms': 'kg',
+      'lb': 'lbs',
+      'lbs': 'lbs',
+      'pound': 'lbs',
+      'pounds': 'lbs',
+      'oz': 'oz',
+      'ounce': 'oz',
+      'ounces': 'oz',
+      'ml': 'ml',
+      'milliliter': 'ml',
+      'milliliters': 'ml',
+      'l': 'L',
+      'liter': 'L',
+      'liters': 'L',
+      'litre': 'L',
+      'litres': 'L',
+    }
+    return normalized[unit.toLowerCase()] || unit.toLowerCase()
+  }
+
+  function convertToLargerUnit(quantity: number, unit: string): { displayQuantity: string; displayUnit: string } {
+    // Convert to larger units when appropriate
+    if (unit === 'g' && quantity >= 1000) {
+      return { displayQuantity: (quantity / 1000).toFixed(2), displayUnit: 'kg' }
+    }
+    if (unit === 'ml' && quantity >= 1000) {
+      return { displayQuantity: (quantity / 1000).toFixed(2), displayUnit: 'L' }
+    }
+    if (unit === 'oz' && quantity >= 16) {
+      return { displayQuantity: (quantity / 16).toFixed(2), displayUnit: 'lbs' }
+    }
+    
+    // Round to 2 decimal places for cleaner display
+    const rounded = quantity % 1 === 0 ? quantity.toString() : quantity.toFixed(2)
+    return { displayQuantity: rounded, displayUnit: unit }
   }
 
   function getMealPlansForDate(date: Date, mealType: string): any[] {
@@ -170,6 +356,21 @@ export function MealPlanner() {
           Next →
         </button>
       </div>
+
+      {/* Generate Shopping List Button */}
+      {mealPlans.length > 0 && (
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={generateShoppingList}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors shadow-md hover:shadow-lg"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Generate Shopping List
+          </button>
+        </div>
+      )}
 
       {/* Calendar Grid */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -289,20 +490,35 @@ export function MealPlanner() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Recipe
+                    Recipe {recipes.length === 0 && <span className="text-amber-600">(Save recipes first!)</span>}
                   </label>
-                  <select
-                    value={selectedRecipe}
-                    onChange={(e) => setSelectedRecipe(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="">Select a recipe...</option>
-                    {recipes.map(recipe => (
-                      <option key={recipe.id} value={recipe.id}>
-                        {recipe.title}
-                      </option>
-                    ))}
-                  </select>
+                  {recipes.length > 0 ? (
+                    <select
+                      value={selectedRecipe}
+                      onChange={(e) => setSelectedRecipe(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">Select a recipe...</option>
+                      {recipes.map(recipe => (
+                        <option key={recipe.id} value={recipe.id}>
+                          {recipe.title}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-sm text-amber-800 mb-2">
+                        You need to save some recipes first!
+                      </p>
+                      <Link
+                        href="/recipes"
+                        className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                        onClick={() => setShowAddModal(false)}
+                      >
+                        Browse Recipes →
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
 

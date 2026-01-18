@@ -19,12 +19,16 @@ export function ShoppingList() {
 
   async function loadShoppingLists() {
     try {
-      const response = await fetch('/api/shopping-list')
-      const data = await response.json()
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .order('created_at', { ascending: false })
       
-      if (data.shopping_lists && data.shopping_lists.length > 0) {
-        setLists(data.shopping_lists)
-        setActiveListId(data.shopping_lists[0].id)
+      if (error) throw error
+      
+      if (data && data.length > 0) {
+        setLists(data)
+        setActiveListId(data[0].id)
       }
     } catch (error) {
       console.error('Error loading shopping lists:', error)
@@ -37,17 +41,24 @@ export function ShoppingList() {
     if (!newListName.trim()) return
 
     try {
-      const response = await fetch('/api/shopping-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newListName, items: [] }),
-      })
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
 
-      const data = await response.json()
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .insert({
+          user_id: user.id,
+          name: newListName,
+          items: [],
+        })
+        .select()
+        .single()
+
+      if (error) throw error
       
-      if (data.shopping_list) {
-        setLists([data.shopping_list, ...lists])
-        setActiveListId(data.shopping_list.id)
+      if (data) {
+        setLists([data, ...lists])
+        setActiveListId(data.id)
         setNewListName('')
         setShowNewListForm(false)
       }
@@ -58,17 +69,18 @@ export function ShoppingList() {
 
   async function updateList(listId: string, updates: Partial<ShoppingListType>) {
     try {
-      const response = await fetch(`/api/shopping-list/${listId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates),
-      })
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .update(updates)
+        .eq('id', listId)
+        .select()
+        .single()
 
-      const data = await response.json()
+      if (error) throw error
       
-      if (data.shopping_list) {
+      if (data) {
         setLists(lists.map(list => 
-          list.id === listId ? data.shopping_list : list
+          list.id === listId ? data : list
         ))
       }
     } catch (error) {
@@ -80,7 +92,12 @@ export function ShoppingList() {
     if (!confirm('Delete this shopping list?')) return
 
     try {
-      await fetch(`/api/shopping-list/${listId}`, { method: 'DELETE' })
+      const { error } = await supabase
+        .from('shopping_lists')
+        .delete()
+        .eq('id', listId)
+
+      if (error) throw error
       
       const newLists = lists.filter(list => list.id !== listId)
       setLists(newLists)
@@ -138,13 +155,23 @@ export function ShoppingList() {
 
   const activeList = lists.find(l => l.id === activeListId)
 
-  // Group items by recipe
-  const groupedItems = activeList?.items.reduce((acc, item, index) => {
-    const key = item.recipe_title || 'Custom Items'
-    if (!acc[key]) acc[key] = []
-    acc[key].push({ ...item, index })
-    return acc
-  }, {} as Record<string, (ShoppingListItem & { index: number })[]>) || {}
+  // Check if list has recipe groupings (old style) or is consolidated (new style)
+  const hasRecipeGrouping = activeList?.items.some(item => item.recipe_title)
+  
+  // Group items by recipe only if they have recipe_title
+  const groupedItems = hasRecipeGrouping && activeList
+    ? activeList.items.reduce((acc, item, index) => {
+        const key = item.recipe_title || 'Custom Items'
+        if (!acc[key]) acc[key] = []
+        acc[key].push({ ...item, index })
+        return acc
+      }, {} as Record<string, (ShoppingListItem & { index: number })[]>)
+    : null
+
+  // Simple list for consolidated items (no grouping)
+  const simpleItems = !hasRecipeGrouping && activeList
+    ? activeList.items.map((item, index) => ({ ...item, index }))
+    : null
 
   if (loading) {
     return (
@@ -241,8 +268,8 @@ export function ShoppingList() {
             </div>
           </div>
 
-          {/* Items by Recipe */}
-          {Object.keys(groupedItems).length > 0 ? (
+          {/* Items - Grouped by Recipe or Simple List */}
+          {groupedItems && Object.keys(groupedItems).length > 0 ? (
             <div className="space-y-6">
               {Object.entries(groupedItems).map(([recipeName, items]) => (
                 <div key={recipeName}>
@@ -281,6 +308,28 @@ export function ShoppingList() {
                 </div>
               ))}
             </div>
+          ) : simpleItems && simpleItems.length > 0 ? (
+            <ul className="space-y-2">
+              {simpleItems.map((item) => (
+                <li key={item.index} className="flex items-center gap-3 group">
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={() => toggleItem(activeList.id, item.index)}
+                    className="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
+                  />
+                  <span className={`flex-1 ${item.checked ? 'line-through text-gray-400' : ''}`}>
+                    {item.text}
+                  </span>
+                  <button
+                    onClick={() => removeItem(activeList.id, item.index)}
+                    className="opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-700 transition-opacity"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
           ) : (
             <p className="text-center text-gray-500 py-8">
               No items yet. Add recipes or custom items!

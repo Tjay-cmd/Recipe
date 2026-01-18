@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Recipe } from '@/types/database'
+import { createClient } from '@/lib/supabase/client'
 
 interface AddToShoppingListButtonProps {
   recipe: Recipe
@@ -11,6 +12,7 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
   const [lists, setLists] = useState<any[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
+  const supabase = createClient()
 
   useEffect(() => {
     if (showDropdown) {
@@ -20,9 +22,13 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
 
   async function loadLists() {
     try {
-      const response = await fetch('/api/shopping-list')
-      const data = await response.json()
-      setLists(data.shopping_lists || [])
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      setLists(data || [])
     } catch (error) {
       console.error('Error loading lists:', error)
     }
@@ -32,9 +38,13 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
     setLoading(true)
     try {
       // Get current list
-      const response = await fetch(`/api/shopping-list/${listId}`)
-      const data = await response.json()
-      const list = data.shopping_list
+      const { data: list, error: fetchError } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .eq('id', listId)
+        .single()
+
+      if (fetchError) throw fetchError
 
       // Add recipe ingredients to list
       const newItems = recipe.ingredients.map(ingredient => ({
@@ -47,11 +57,12 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
       const updatedItems = [...list.items, ...newItems]
 
       // Update list
-      await fetch(`/api/shopping-list/${listId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: updatedItems }),
-      })
+      const { error: updateError } = await supabase
+        .from('shopping_lists')
+        .update({ items: updatedItems })
+        .eq('id', listId)
+
+      if (updateError) throw updateError
 
       alert(`Added ${recipe.ingredients.length} ingredients to your shopping list!`)
       setShowDropdown(false)
@@ -66,6 +77,9 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
   async function createNewListAndAdd() {
     setLoading(true)
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
       // Create new list with recipe ingredients
       const newItems = recipe.ingredients.map(ingredient => ({
         text: ingredient,
@@ -74,19 +88,18 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
         recipe_title: recipe.title,
       }))
 
-      const response = await fetch('/api/shopping-list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('shopping_lists')
+        .insert({
+          user_id: user.id,
           name: `${recipe.title} Shopping List`,
           items: newItems,
-        }),
-      })
+        })
 
-      if (response.ok) {
-        alert(`Created new shopping list with ${recipe.ingredients.length} ingredients!`)
-        setShowDropdown(false)
-      }
+      if (error) throw error
+
+      alert(`Created new shopping list with ${recipe.ingredients.length} ingredients!`)
+      setShowDropdown(false)
     } catch (error) {
       console.error('Error creating list:', error)
       alert('Failed to create shopping list')
