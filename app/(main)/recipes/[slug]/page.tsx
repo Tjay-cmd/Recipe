@@ -193,9 +193,8 @@ export default async function RecipePage({ params }: RecipePageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(recipeSchema) }}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <CookMode>
-          <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
-        </CookMode>
+        {/* CookMode temporarily disabled for debugging */}
+        <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
         
         {/* Ratings & Reviews - Temporarily disabled to debug React error */}
         {/* <ReviewSection recipeId={recipe.id} /> */}
