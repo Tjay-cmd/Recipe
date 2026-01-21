@@ -197,8 +197,8 @@ export default async function RecipePage({ params }: RecipePageProps) {
           <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
         </CookMode>
         
-        {/* Ratings & Reviews */}
-        <ReviewSection recipeId={recipe.id} />
+        {/* Ratings & Reviews - Temporarily disabled to debug React error */}
+        {/* <ReviewSection recipeId={recipe.id} /> */}
         
         {/* Related Recipes - Temporarily disabled to debug React error */}
         {/* <RelatedRecipes currentRecipe={recipe} /> */}
