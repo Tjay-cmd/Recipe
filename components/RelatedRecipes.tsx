@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Recipe } from '@/types/database'
 import { RecipeCard } from './RecipeCard'
+import { createClient } from '@/lib/supabase/client'
 
 interface RelatedRecipesProps {
   currentRecipe: Recipe
@@ -18,30 +19,33 @@ export function RelatedRecipes({ currentRecipe }: RelatedRecipesProps) {
 
   async function loadRelatedRecipes() {
     try {
-      // Fetch recipes with matching tags
-      const response = await fetch('/api/recipes?limit=50')
-      
-      if (!response.ok) {
-        console.error('Failed to fetch recipes:', response.statusText)
+      const supabase = createClient()
+
+      // Fetch recipes directly from Supabase (no API call needed)
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .limit(50)
+
+      if (error) {
+        console.error('Error fetching recipes:', error)
         setRelatedRecipes([])
         setLoading(false)
         return
       }
-      
-      const data = await response.json()
-      
-      if (data.recipes && Array.isArray(data.recipes)) {
+
+      if (data && Array.isArray(data)) {
         // Filter and score recipes by tag overlap
         const currentTags = currentRecipe.tags || []
-        const scored = data.recipes
+        const scored = data
           .filter((recipe: Recipe) => recipe.id !== currentRecipe.id) // Exclude current recipe
           .map((recipe: Recipe) => {
             // Count matching tags (handle null/undefined tags)
             const recipeTags = recipe.tags || []
-            const matchingTags = recipeTags.filter(tag => 
+            const matchingTags = recipeTags.filter(tag =>
               currentTags.includes(tag)
             ).length
-            
+
             return { recipe, score: matchingTags }
           })
           .filter((item: { recipe: Recipe; score: number }) => item.score > 0) // Only recipes with at least 1 matching tag
@@ -51,7 +55,6 @@ export function RelatedRecipes({ currentRecipe }: RelatedRecipesProps) {
 
         setRelatedRecipes(scored)
       } else {
-        console.error('Invalid response format:', data)
         setRelatedRecipes([])
       }
     } catch (error) {
