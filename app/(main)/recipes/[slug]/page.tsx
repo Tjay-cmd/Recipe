@@ -167,10 +167,21 @@ export default async function RecipePage({ params }: RecipePageProps) {
     notFound()
   }
 
-  const isFavorite = await checkIsFavorite(recipe.id)
-  const isSubscribed = await checkIsSubscribed()
+  // Check favorite and subscription status (these handle unauthenticated users gracefully)
+  let isFavorite = false
+  let isSubscribed = false
+  
+  try {
+    isFavorite = await checkIsFavorite(recipe.id)
+    isSubscribed = await checkIsSubscribed()
+  } catch (error) {
+    // If there's an error checking auth status, just use defaults
+    // This ensures the page still loads for unauthenticated users
+    console.error('Error checking user status:', error)
+  }
 
-  // Increment views (server action)
+  // Increment views (server action) - this handles errors internally
+  // It will silently fail for unauthenticated users due to RLS
   await incrementRecipeViews(recipe.id)
 
   const recipeSchema = generateRecipeSchema(recipe)
