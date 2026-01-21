@@ -200,8 +200,8 @@ export default async function RecipePage({ params }: RecipePageProps) {
         {/* Ratings & Reviews */}
         <ReviewSection recipeId={recipe.id} />
         
-        {/* Related Recipes */}
-        <RelatedRecipes currentRecipe={recipe} />
+        {/* Related Recipes - Temporarily disabled to debug React error */}
+        {/* <RelatedRecipes currentRecipe={recipe} /> */}
       </div>
     </>
   )
