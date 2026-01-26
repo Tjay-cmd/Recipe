@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
-import { RecipeDetail } from '@/components/RecipeDetail'
+import { RecipeDetailWrapper } from '@/components/RecipeDetailWrapper'
 import { RelatedRecipes } from '@/components/RelatedRecipes'
 import { ReviewSection } from '@/components/ReviewSection'
 import { CookMode } from '@/components/CookMode'
@@ -29,51 +29,7 @@ async function getRecipe(slug: string): Promise<Recipe | null> {
   return data
 }
 
-async function checkIsFavorite(recipeId: string): Promise<boolean> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return false
-  }
-
-  const { data } = await supabase
-    .from('favorites')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('recipe_id', recipeId)
-    .single()
-
-  return !!data
-}
-
-async function checkIsSubscribed(): Promise<boolean> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user || !user.email) {
-    return false
-  }
-
-  // Check if user is admin (admins get Pro access automatically)
-  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
-  if (adminEmails.includes(user.email)) {
-    return true
-  }
-
-  const { data } = await supabase
-    .from('subscriptions')
-    .select('status')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
-
-  return !!data
-}
+// Auth checks moved to client-side wrapper component to prevent SSR hydration mismatch
 
 export async function generateMetadata({ params }: RecipePageProps): Promise<Metadata> {
   const recipe = await getRecipe(params.slug)
@@ -167,21 +123,7 @@ export default async function RecipePage({ params }: RecipePageProps) {
     notFound()
   }
 
-  // Check favorite and subscription status (these handle unauthenticated users gracefully)
-  let isFavorite = false
-  let isSubscribed = false
-  
-  try {
-    isFavorite = await checkIsFavorite(recipe.id)
-    isSubscribed = await checkIsSubscribed()
-  } catch (error) {
-    // If there's an error checking auth status, just use defaults
-    // This ensures the page still loads for unauthenticated users
-    console.error('Error checking user status:', error)
-  }
-
   // Increment views (server action) - this handles errors internally
-  // It will silently fail for unauthenticated users due to RLS
   await incrementRecipeViews(recipe.id)
 
   const recipeSchema = generateRecipeSchema(recipe)
@@ -193,14 +135,15 @@ export default async function RecipePage({ params }: RecipePageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(recipeSchema) }}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* CookMode temporarily disabled for debugging */}
-        <RecipeDetail recipe={recipe} isSubscribed={isSubscribed} isFavorite={isFavorite} />
+        <CookMode>
+          <RecipeDetailWrapper recipe={recipe} />
+        </CookMode>
         
-        {/* Ratings & Reviews - Temporarily disabled to debug React error */}
-        {/* <ReviewSection recipeId={recipe.id} /> */}
+        {/* Ratings & Reviews */}
+        <ReviewSection recipeId={recipe.id} />
         
-        {/* Related Recipes - Temporarily disabled to debug React error */}
-        {/* <RelatedRecipes currentRecipe={recipe} /> */}
+        {/* Related Recipes */}
+        <RelatedRecipes currentRecipe={recipe} />
       </div>
     </>
   )
