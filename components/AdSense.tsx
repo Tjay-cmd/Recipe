@@ -23,9 +23,24 @@ export function AdSense({
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
+  // Get publisher ID first (needed for hook dependencies)
+  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID
+
+  // IMPORTANT: All hooks must come before any conditional returns!
   useEffect(() => {
     checkProStatus()
   }, [])
+
+  // Second useEffect for AdSense initialization - must be called unconditionally
+  useEffect(() => {
+    if (showAds && publisherId && typeof window !== 'undefined' && (window as any).adsbygoogle) {
+      try {
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({})
+      } catch (e) {
+        console.error('Error initializing AdSense:', e)
+      }
+    }
+  }, [showAds, publisherId])
 
   async function checkProStatus() {
     try {
@@ -80,9 +95,6 @@ export function AdSense({
     return null // Don't show ads for Pro members
   }
 
-  // Only render AdSense if NEXT_PUBLIC_ADSENSE_PUBLISHER_ID is set
-  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID
-
   if (!publisherId) {
     // AdSense not configured - show placeholder for testing
     return (
@@ -98,16 +110,6 @@ export function AdSense({
       </div>
     )
   }
-
-  useEffect(() => {
-    if (showAds && publisherId && typeof window !== 'undefined' && (window as any).adsbygoogle) {
-      try {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({})
-      } catch (e) {
-        console.error('Error initializing AdSense:', e)
-      }
-    }
-  }, [showAds, publisherId])
 
   return (
     <>
