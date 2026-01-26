@@ -17,6 +17,20 @@ export default function AccountPage() {
   useEffect(() => {
     const supabase = createClient()
 
+    // Check for PayPal redirect parameters
+    const params = new URLSearchParams(window.location.search)
+    const paypalStatus = params.get('paypal')
+    
+    if (paypalStatus === 'success') {
+      // Show success message
+      alert('Payment successful! Your Pro subscription is now active.')
+      // Remove query parameter
+      window.history.replaceState({}, '', '/account')
+    } else if (paypalStatus === 'cancelled') {
+      alert('Payment was cancelled. You can try again anytime.')
+      window.history.replaceState({}, '', '/account')
+    }
+
     // Check auth status
     const checkAuth = async () => {
       const { data: { user }, error } = await supabase.auth.getUser()
@@ -36,12 +50,13 @@ export default function AccountPage() {
         setSubscriptionStatus('admin')
       } else {
         // Fetch subscription status (only if not admin)
+        // Refresh subscription status after PayPal redirect
         const { data: subData } = await supabase
           .from('subscriptions')
           .select('status')
           .eq('user_id', user.id)
           .eq('status', 'active')
-          .single()
+          .maybeSingle()
 
         setSubscriptionStatus(subData ? 'pro' : 'free')
       }
