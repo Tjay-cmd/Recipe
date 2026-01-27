@@ -7,8 +7,11 @@ import { Footer } from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Viral Recipes You Can Actually Cook',
-  description: 'Discover viral recipes that are easy to make at home. Step-by-step instructions, meal plans, and more.',
+  title: 'YumSpot | Viral Recipes You Can Actually Cook',
+  description: 'YumSpot helps you cook viral recipes at home with step-by-step instructions, smart shopping lists, and meal planning tools.',
+  icons: {
+    icon: '/favicon.svg',
+  },
   other: {
     // Add your Pinterest verification code here after claiming your site
     // Get this from: https://pinterest.com/settings/claim

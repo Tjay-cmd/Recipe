@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { SignOutButton } from './SignOutButton'
@@ -40,12 +41,18 @@ export function Header() {
   }, [])
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">🍳</span>
-            <span className="text-xl font-bold text-gray-900">YumSpot</span>
+        <div className="flex items-center justify-between h-20 py-0">
+          <Link href="/" className="flex items-center gap-4">
+            <Image
+              src="/images/yumspot_LOGO-removebg-preview.png"
+              alt="YumSpot"
+              width={380}
+              height={140}
+              priority
+              className="h-[144px] w-auto"
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
@@ -116,7 +123,7 @@ export function Header() {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden border-t border-gray-200 py-4 animate-in slide-in-from-top-2 duration-200">
             <nav className="flex flex-col space-y-4">
               <Link
                 href="/recipes"

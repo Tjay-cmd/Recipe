@@ -98,43 +98,50 @@ export default function AccountPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8">My Account</h1>
+      <h1 className="text-4xl md:text-5xl font-bold mb-10 text-gray-900">My Account</h1>
 
       {/* Account Status */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">
+      <div className="bg-white rounded-xl shadow-lg p-8 mb-10 border border-gray-100">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900">
           {subscriptionStatus === 'admin' ? 'Account Status' : 'Subscription'}
         </h2>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-lg">
-              Status: <span className={`font-semibold capitalize ${subscriptionStatus === 'admin' ? 'text-emerald-600' : ''}`}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-lg font-medium text-gray-700">Status:</span>
+              <span className={`px-4 py-1.5 rounded-full font-bold text-sm capitalize ${
+                subscriptionStatus === 'admin' 
+                  ? 'bg-emerald-100 text-emerald-700' 
+                  : subscriptionStatus === 'pro'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-gray-100 text-gray-700'
+              }`}>
                 {subscriptionStatus}
               </span>
-            </p>
+            </div>
             {subscriptionStatus === 'admin' && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-gray-600">
                 You have full access to manage recipes.{' '}
-                <Link href="/admin" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                <Link href="/admin" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
                   Go to Admin Panel →
                 </Link>
               </p>
             )}
             {subscriptionStatus === 'free' && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-gray-600">
                 Upgrade to Pro for meal plans, grocery lists, and more!
               </p>
             )}
             {subscriptionStatus === 'pro' && (
-              <p className="text-sm text-gray-600 mt-1">
-                You have access to all Pro features!
+              <p className="text-gray-600">
+                🎉 You have access to all Pro features!
               </p>
             )}
           </div>
           {subscriptionStatus === 'free' && (
             <Link
               href="/pro"
-              className="px-6 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+              className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-bold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Upgrade to Pro
             </Link>
@@ -144,19 +151,21 @@ export default function AccountPage() {
 
       {/* Saved Recipes */}
       <div>
-        <h2 className="text-2xl font-bold mb-6">Saved Recipes</h2>
+        <h2 className="text-3xl font-bold mb-8 text-gray-900">Saved Recipes</h2>
         {savedRecipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
             {savedRecipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <p className="text-gray-600 mb-4">You haven't saved any recipes yet.</p>
+          <div className="bg-white rounded-xl shadow-md p-16 text-center border border-gray-100">
+            <div className="text-6xl mb-4">📚</div>
+            <p className="text-xl font-semibold text-gray-900 mb-2">No saved recipes yet</p>
+            <p className="text-gray-600 mb-6">Start saving your favorite recipes to access them here!</p>
             <Link
               href="/recipes"
-              className="text-emerald-600 hover:text-emerald-700 font-medium"
+              className="inline-block px-6 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
             >
               Browse recipes →
             </Link>
