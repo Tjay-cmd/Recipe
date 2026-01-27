@@ -7,6 +7,7 @@ import { RecipeCard } from '@/components/RecipeCard'
 import { Recipe } from '@/types/database'
 import Link from 'next/link'
 import { useToast } from '@/components/Toast'
+import { ConfirmModal } from '@/components/ConfirmModal'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -16,6 +17,7 @@ export default function AccountPage() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'pro' | 'admin'>('free')
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -49,6 +51,8 @@ export default function AccountPage() {
       const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e => e.trim()) || []
       const isAdmin = user.email && adminEmails.includes(user.email)
 
+      console.log('🔍 User email:', user.email, 'Is admin:', isAdmin)
+
       if (isAdmin) {
         setSubscriptionStatus('admin')
       } else {
@@ -61,6 +65,7 @@ export default function AccountPage() {
           .eq('status', 'active')
           .maybeSingle()
 
+        console.log('📋 Subscription data:', subData)
         setSubscriptionStatus(subData ? 'pro' : 'free')
       }
 
@@ -87,15 +92,24 @@ export default function AccountPage() {
     checkAuth()
   }, [router])
 
-  async function handleCancelSubscription() {
-    if (!confirm('Are you sure you want to cancel your Pro subscription? You will lose access to all Pro features.')) {
-      return
-    }
-
+  async function confirmCancelSubscription() {
     setCancelling(true)
     try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        showToast('Please log in again to cancel your subscription', 'error')
+        router.push('/login')
+        return
+      }
+
       const response = await fetch('/api/paypal/cancel-subscription', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
       })
 
       if (!response.ok) {
@@ -167,9 +181,9 @@ export default function AccountPage() {
                   🎉 You have access to all Pro features!
                 </p>
                 <button
-                  onClick={handleCancelSubscription}
+                  onClick={() => setShowCancelModal(true)}
                   disabled={cancelling}
-                  className="text-sm text-red-600 hover:text-red-700 underline transition-colors disabled:opacity-50"
+                  className="text-sm text-red-600 hover:text-red-700 hover:underline transition-all disabled:opacity-50 font-medium"
                 >
                   {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
                 </button>
@@ -210,6 +224,18 @@ export default function AccountPage() {
           </div>
         )}
       </div>
+
+      {/* Cancel Subscription Modal */}
+      <ConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={confirmCancelSubscription}
+        title="Cancel Pro Subscription?"
+        message="Are you sure you want to cancel your Pro subscription? You will lose access to meal planning, shopping lists, exclusive recipes, and ad-free browsing."
+        confirmText="Yes, Cancel"
+        cancelText="Keep Pro"
+        type="danger"
+      />
     </div>
   )
 }
