@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getPayPalSubscription } from '@/lib/paypal/client'
 import { PAYPAL_CONFIG, getPayPalBaseUrl } from '@/lib/paypal/config'
 import { getPayPalAccessToken } from '@/lib/paypal/client'
@@ -107,7 +107,17 @@ export async function POST(request: NextRequest) {
       transmissionId,
     })
     
-    const supabase = await createClient()
+    // Use service role key for webhooks (bypasses RLS)
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
     // Handle different event types
     switch (event.event_type) {
