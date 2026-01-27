@@ -60,7 +60,7 @@ export default async function HomePage() {
       <section className="text-center mb-16 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-orange-50 to-emerald-50 opacity-50 rounded-3xl -z-10"></div>
         <div className="relative py-16 px-6">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent leading-tight pb-2 pt-2">
             Viral recipes you can actually cook
           </h1>
           <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">

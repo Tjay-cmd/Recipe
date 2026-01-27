@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { MealPlan } from '@/types/database'
 import Link from 'next/link'
+import { useToast } from './Toast'
 
 export function MealPlanner() {
+  const { showToast } = useToast()
   const [mealPlans, setMealPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(getWeekStart(new Date()))
@@ -98,7 +100,7 @@ export function MealPlanner() {
       setSelectedRecipe('')
     } catch (error) {
       console.error('Error adding meal plan:', error)
-      alert('Failed to add meal')
+      showToast('Failed to add meal', 'error')
     }
   }
 
@@ -115,13 +117,13 @@ export function MealPlanner() {
       await loadMealPlans()
     } catch (error) {
       console.error('Error deleting meal plan:', error)
-      alert('Failed to remove meal')
+      showToast('Failed to remove meal', 'error')
     }
   }
 
   async function generateShoppingList() {
     if (mealPlans.length === 0) {
-      alert('No meals planned this week!')
+      showToast('No meals planned this week!', 'info')
       return
     }
 
@@ -188,10 +190,10 @@ export function MealPlanner() {
 
       if (error) throw error
 
-      alert(`✅ Shopping list created with ${items.length} consolidated items!`)
+      showToast(`✅ Shopping list created with ${items.length} consolidated items!`, 'success')
     } catch (error) {
       console.error('Error generating shopping list:', error)
-      alert('Failed to generate shopping list')
+      showToast('Failed to generate shopping list', 'error')
     }
   }
 

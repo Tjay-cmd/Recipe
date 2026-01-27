@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Recipe } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from './Toast'
 
 interface AddToShoppingListButtonProps {
   recipe: Recipe
@@ -13,6 +14,7 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (showDropdown) {
@@ -64,11 +66,11 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
 
       if (updateError) throw updateError
 
-      alert(`Added ${recipe.ingredients.length} ingredients to your shopping list!`)
+      showToast(`✅ Added ${recipe.ingredients.length} ingredients to your shopping list!`, 'success')
       setShowDropdown(false)
     } catch (error) {
       console.error('Error adding to list:', error)
-      alert('Failed to add to shopping list')
+      showToast('Failed to add to shopping list', 'error')
     } finally {
       setLoading(false)
     }
@@ -98,11 +100,11 @@ export function AddToShoppingListButton({ recipe }: AddToShoppingListButtonProps
 
       if (error) throw error
 
-      alert(`Created new shopping list with ${recipe.ingredients.length} ingredients!`)
+      showToast(`✅ Created new shopping list with ${recipe.ingredients.length} ingredients!`, 'success')
       setShowDropdown(false)
     } catch (error) {
       console.error('Error creating list:', error)
-      alert('Failed to create shopping list')
+      showToast('Failed to create shopping list', 'error')
     } finally {
       setLoading(false)
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from './Toast'
 import { RatingStars } from './RatingStars'
 import { Review, RecipeRatingStats } from '@/types/database'
 
@@ -10,6 +11,7 @@ interface ReviewSectionProps {
 }
 
 export function ReviewSection({ recipeId }: ReviewSectionProps) {
+  const { showToast } = useToast()
   const [rating, setRating] = useState<number>(0)
   const [comment, setComment] = useState('')
   const [reviews, setReviews] = useState<Review[]>([])
@@ -193,7 +195,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       }
     } catch (error) {
       console.error('Error submitting rating:', error)
-      alert('Failed to submit rating')
+      showToast('Failed to submit rating', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -252,7 +254,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       }
     } catch (error) {
       console.error('Error submitting review:', error)
-      alert('Failed to submit review')
+      showToast('Failed to submit review', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -289,7 +291,7 @@ export function ReviewSection({ recipeId }: ReviewSectionProps) {
       }
     } catch (error) {
       console.error('Error deleting review:', error)
-      alert('Failed to delete review')
+      showToast('Failed to delete review', 'error')
     }
   }
 

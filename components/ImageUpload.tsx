@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { useToast } from './Toast'
 
 interface ImageUploadProps {
   value: string
@@ -10,6 +11,7 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, label = 'Recipe Image' }: ImageUploadProps) {
+  const { showToast } = useToast()
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState(value)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -25,13 +27,13 @@ export function ImageUpload({ value, onChange, label = 'Recipe Image' }: ImageUp
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file')
+      showToast('Please select an image file', 'error')
       return
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Image must be less than 5MB')
+      showToast('Image must be less than 5MB', 'error')
       return
     }
 
@@ -64,7 +66,7 @@ export function ImageUpload({ value, onChange, label = 'Recipe Image' }: ImageUp
       onChange(imageUrl)
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload image. Please try again.')
+      showToast('Failed to upload image. Please try again.', 'error')
     } finally {
       setUploading(false)
     }

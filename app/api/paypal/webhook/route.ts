@@ -146,21 +146,52 @@ export async function POST(request: NextRequest) {
           }
 
           if (userId) {
-            const { error } = await supabase
+            console.log(`🔍 Processing subscription for user: ${userId}, subscription: ${subscriptionId}`)
+            
+            // First, check if user already has a subscription
+            const { data: existing } = await supabase
               .from('subscriptions')
-              .upsert({
-                user_id: userId,
-                paypal_subscription_id: subscriptionId,
-                status: 'active',
-                current_period_end: nextBillingTime
-                  ? new Date(nextBillingTime).toISOString()
-                  : null,
-              })
-
-            if (error) {
-              console.error('Error updating subscription:', error)
+              .select('id')
+              .eq('user_id', userId)
+              .single()
+            
+            if (existing) {
+              // Update existing subscription
+              const { error } = await supabase
+                .from('subscriptions')
+                .update({
+                  paypal_subscription_id: subscriptionId,
+                  status: 'active',
+                  current_period_end: nextBillingTime
+                    ? new Date(nextBillingTime).toISOString()
+                    : null,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('user_id', userId)
+              
+              if (error) {
+                console.error('❌ Error updating subscription:', error)
+              } else {
+                console.log(`✅ Subscription updated for user: ${userId}`)
+              }
             } else {
-              console.log(`✅ Subscription activated for user: ${userId}`)
+              // Insert new subscription
+              const { error } = await supabase
+                .from('subscriptions')
+                .insert({
+                  user_id: userId,
+                  paypal_subscription_id: subscriptionId,
+                  status: 'active',
+                  current_period_end: nextBillingTime
+                    ? new Date(nextBillingTime).toISOString()
+                    : null,
+                })
+              
+              if (error) {
+                console.error('❌ Error creating subscription:', error)
+              } else {
+                console.log(`✅ Subscription created for user: ${userId}`)
+              }
             }
           } else {
             console.log(`⚠️ Could not identify user - no custom_id or matching email`)

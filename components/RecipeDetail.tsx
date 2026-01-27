@@ -141,12 +141,16 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
       <NutritionFacts recipe={recipe} isSubscribed={isSubscribed} />
 
       {/* Ad 1: Between Ingredients and Steps (High Engagement) */}
-      <div className="my-8 flex justify-center print:hidden">
-        <AdSense 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_1 || '1234567890'} 
-          className="max-w-full"
-        />
-      </div>
+      {/* Only show ads if recipe has substantial content (ingredients + steps) */}
+      {recipe.ingredients && recipe.ingredients.length > 0 && recipe.steps && recipe.steps.length > 0 && (
+        <div className="my-8 flex justify-center print:hidden">
+          <AdSense 
+            adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_1 || '1234567890'} 
+            className="max-w-full"
+            hasSubstantialContent={true}
+          />
+        </div>
+      )}
 
       {/* Steps */}
       <section id="steps" className="mb-12 scroll-mt-20">
@@ -180,12 +184,16 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
       </section>
 
       {/* Ad 2: After Steps (When users finish reading) */}
-      <div className="my-8 flex justify-center print:hidden">
-        <AdSense 
-          adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_2 || '1234567890'} 
-          className="max-w-full"
-        />
-      </div>
+      {/* Only show ads if recipe has substantial content (ingredients + steps) */}
+      {recipe.ingredients && recipe.ingredients.length > 0 && recipe.steps && recipe.steps.length > 0 && (
+        <div className="my-8 flex justify-center print:hidden">
+          <AdSense 
+            adSlot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_2 || '1234567890'} 
+            className="max-w-full"
+            hasSubstantialContent={true}
+          />
+        </div>
+      )}
 
       {/* Tags */}
       {recipe.tags && recipe.tags.length > 0 && (

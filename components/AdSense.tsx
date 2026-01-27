@@ -10,6 +10,8 @@ interface AdSenseProps {
   style?: React.CSSProperties
   className?: string
   responsive?: boolean
+  minContentLength?: number // Minimum content length to show ads (default: 500 chars)
+  hasSubstantialContent?: boolean // Explicit flag for substantial content
 }
 
 export function AdSense({ 
@@ -17,7 +19,8 @@ export function AdSense({
   adFormat = 'auto',
   style,
   className = '',
-  responsive = true
+  responsive = true,
+  hasSubstantialContent = true, // Default to true, but should be set explicitly
 }: AdSenseProps) {
   const [showAds, setShowAds] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
@@ -89,6 +92,11 @@ export function AdSense({
         <div className="text-gray-400 text-sm">Loading ads...</div>
       </div>
     )
+  }
+
+  // Don't show ads if no substantial content (AdSense policy requirement)
+  if (!hasSubstantialContent) {
+    return null
   }
 
   if (!showAds) {

@@ -6,13 +6,16 @@ import { createClient } from '@/lib/supabase/client'
 import { RecipeCard } from '@/components/RecipeCard'
 import { Recipe } from '@/types/database'
 import Link from 'next/link'
+import { useToast } from '@/components/Toast'
 
 export default function AccountPage() {
   const router = useRouter()
+  const { showToast } = useToast()
   const [user, setUser] = useState<any>(null)
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([])
   const [subscriptionStatus, setSubscriptionStatus] = useState<'free' | 'pro' | 'admin'>('free')
   const [loading, setLoading] = useState(true)
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -23,11 +26,11 @@ export default function AccountPage() {
     
     if (paypalStatus === 'success') {
       // Show success message
-      alert('Payment successful! Your Pro subscription is now active.')
+      showToast('🎉 Payment successful! Your Pro subscription is now active.', 'success')
       // Remove query parameter
       window.history.replaceState({}, '', '/account')
     } else if (paypalStatus === 'cancelled') {
-      alert('Payment was cancelled. You can try again anytime.')
+      showToast('Payment was cancelled. You can try again anytime.', 'info')
       window.history.replaceState({}, '', '/account')
     }
 
@@ -84,6 +87,32 @@ export default function AccountPage() {
     checkAuth()
   }, [router])
 
+  async function handleCancelSubscription() {
+    if (!confirm('Are you sure you want to cancel your Pro subscription? You will lose access to all Pro features.')) {
+      return
+    }
+
+    setCancelling(true)
+    try {
+      const response = await fetch('/api/paypal/cancel-subscription', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to cancel subscription')
+      }
+
+      showToast('✅ Subscription cancelled successfully. You can resubscribe anytime!', 'success')
+      setSubscriptionStatus('free')
+    } catch (error: any) {
+      console.error('Cancel subscription error:', error)
+      showToast(error.message || 'Failed to cancel subscription. Please try again.', 'error')
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -133,9 +162,18 @@ export default function AccountPage() {
               </p>
             )}
             {subscriptionStatus === 'pro' && (
-              <p className="text-gray-600">
-                🎉 You have access to all Pro features!
-              </p>
+              <div>
+                <p className="text-gray-600 mb-3">
+                  🎉 You have access to all Pro features!
+                </p>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={cancelling}
+                  className="text-sm text-red-600 hover:text-red-700 underline transition-colors disabled:opacity-50"
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+                </button>
+              </div>
             )}
           </div>
           {subscriptionStatus === 'free' && (

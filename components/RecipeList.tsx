@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Recipe } from '@/types/database'
+import { useToast } from './Toast'
 
 interface RecipeListProps {
   onEdit?: (recipe: Recipe) => void
@@ -11,6 +12,7 @@ interface RecipeListProps {
 }
 
 export function RecipeList({ onEdit, refreshTrigger }: RecipeListProps) {
+  const { showToast } = useToast()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -45,7 +47,7 @@ export function RecipeList({ onEdit, refreshTrigger }: RecipeListProps) {
       .eq('id', recipe.id)
 
     if (error) {
-      alert('Failed to delete recipe: ' + error.message)
+      showToast('Failed to delete recipe: ' + error.message, 'error')
     } else {
       // Remove from list
       setRecipes(recipes.filter(r => r.id !== recipe.id))

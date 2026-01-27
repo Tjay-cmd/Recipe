@@ -3,10 +3,12 @@
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
+import { useToast } from './Toast'
 
 export function ProCheckoutButton() {
   const router = useRouter()
   const supabase = createClient()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   // Check PayPal enabled status directly from env var
   const paypalEnabled = process.env.NEXT_PUBLIC_ENABLE_PAYPAL_CHECKOUT === 'true'
@@ -22,7 +24,7 @@ export function ProCheckoutButton() {
     }
 
     if (!paypalEnabled) {
-      alert('PayPal checkout is not configured. Please contact support to upgrade.')
+      showToast('PayPal checkout is not configured. Please contact support to upgrade.', 'error')
       return
     }
 
@@ -67,7 +69,7 @@ export function ProCheckoutButton() {
       }
     } catch (error: any) {
       console.error('PayPal checkout error:', error)
-      alert(error.message || 'Failed to start checkout. Please try again.')
+      showToast(error.message || 'Failed to start checkout. Please try again.', 'error')
       setLoading(false)
     }
   }
