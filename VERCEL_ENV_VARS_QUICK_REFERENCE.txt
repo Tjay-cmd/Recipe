@@ -1,0 +1,57 @@
+===========================================
+VERCEL ENVIRONMENT VARIABLES - QUICK COPY
+===========================================
+
+Copy and paste these into Vercel Dashboard → Settings → Environment Variables
+
+===========================================
+PAYPAL CONFIGURATION VARIABLES
+===========================================
+
+ENABLE_PAYPAL_CHECKOUT=true
+
+NEXT_PUBLIC_ENABLE_PAYPAL_CHECKOUT=true
+
+PAYPAL_CLIENT_ID=AWNsmDD6f5pjxe0SdTTEkQ40KvQrPVjQXzDh_7GDqwsErodZRma3FZ1zMlmHosGsRLsydeSYRLY3YCSN
+
+PAYPAL_CLIENT_SECRET=ECc1O8XceGnuh2OdfsWFD2BX2_tbO3WmJoQP0pl52Wfb2C6bREWOfZTL8MG0IZoqsRkJ9_mDTJt9XIED
+
+PAYPAL_MODE=sandbox
+
+PAYPAL_PLAN_ID=P-44W73252A9791212HNF4HCTI
+
+PAYPAL_PRODUCT_ID=PROD-0ED8639768660403F
+
+PAYPAL_WEBHOOK_ID=55T49098J9218290K
+
+===========================================
+VERIFY THESE EXIST (Should already be set)
+===========================================
+
+NEXT_PUBLIC_SUPABASE_URL=https://cercjilqldbulmlztojq.supabase.co
+
+NEXT_PUBLIC_SUPABASE_ANON_KEY=(your existing key)
+
+SUPABASE_SERVICE_ROLE_KEY=(your existing key)
+
+NEXT_PUBLIC_APP_URL=https://yumspot.co.za
+
+===========================================
+INSTRUCTIONS
+===========================================
+
+1. Go to: https://vercel.com/dashboard
+2. Select your project
+3. Go to: Settings → Environment Variables
+4. Add each variable above (one at a time or bulk import)
+5. Make sure to select "Production" environment for all
+6. After adding, Vercel will auto-redeploy
+7. Wait for deployment to complete before testing
+
+===========================================
+WEBHOOK URL (for PayPal Dashboard)
+===========================================
+
+https://yumspot.co.za/api/paypal/webhook
+
+===========================================

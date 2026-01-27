@@ -2,18 +2,6 @@ import { PAYPAL_CONFIG, getPayPalBaseUrl } from './config'
 
 export async function getPayPalAccessToken(): Promise<string> {
   const baseUrl = getPayPalBaseUrl()
-  
-  // Debug logging
-  console.log('PayPal Auth Debug:', {
-    baseUrl,
-    hasClientId: !!PAYPAL_CONFIG.clientId,
-    clientIdLength: PAYPAL_CONFIG.clientId?.length,
-    clientIdPrefix: PAYPAL_CONFIG.clientId?.substring(0, 10),
-    hasClientSecret: !!PAYPAL_CONFIG.clientSecret,
-    clientSecretLength: PAYPAL_CONFIG.clientSecret?.length,
-    mode: PAYPAL_CONFIG.mode,
-  })
-  
   const auth = Buffer.from(`${PAYPAL_CONFIG.clientId}:${PAYPAL_CONFIG.clientSecret}`).toString('base64')
 
   const response = await fetch(`${baseUrl}/v1/oauth2/token`, {
@@ -27,7 +15,6 @@ export async function getPayPalAccessToken(): Promise<string> {
 
   if (!response.ok) {
     const error = await response.text()
-    console.error('PayPal Auth Error Response:', error)
     throw new Error(`PayPal auth failed: ${error}`)
   }
 
@@ -48,6 +35,7 @@ export async function createPayPalSubscription(userId: string, userEmail: string
   // Create subscription using existing plan ID
   const subscriptionData = {
     plan_id: planId,
+    custom_id: userId, // Pass user ID so webhook can identify the user
     start_time: new Date(Date.now() + 60000).toISOString(), // Start 1 minute from now
     subscriber: {
       email_address: userEmail,
