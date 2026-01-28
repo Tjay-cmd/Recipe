@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Recipe } from '@/types/database'
 import { useToast } from './Toast'
+import { CopyableLink } from './CopyableLink'
 
 interface RecipeListProps {
   onEdit?: (recipe: Recipe) => void
@@ -90,6 +91,21 @@ export function RecipeList({ onEdit, refreshTrigger }: RecipeListProps) {
                     Pro
                   </span>
                 )}
+                <button
+                  onClick={async () => {
+                    const recipeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://yumspot.co.za'}/recipes/${recipe.slug}`
+                    try {
+                      await navigator.clipboard.writeText(recipeUrl)
+                      showToast('✅ Recipe link copied!', 'success')
+                    } catch (err) {
+                      showToast('Failed to copy link', 'error')
+                    }
+                  }}
+                  className="px-3 py-1 text-sm bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 transition-colors"
+                  title="Copy recipe link for Pinterest"
+                >
+                  📌 Copy Link
+                </button>
                 {onEdit && (
                   <button
                     onClick={() => onEdit(recipe)}
@@ -111,6 +127,16 @@ export function RecipeList({ onEdit, refreshTrigger }: RecipeListProps) {
         </div>
       ) : (
         <p className="text-gray-500 text-center py-8">No recipes yet.</p>
+      )}
+      
+      {/* Show copyable link for the most recently created recipe */}
+      {recipes.length > 0 && (
+        <div className="mt-6">
+          <CopyableLink 
+            url={`${process.env.NEXT_PUBLIC_APP_URL || 'https://yumspot.co.za'}/recipes/${recipes[0].slug}`}
+            label={`📌 Pinterest Link: ${recipes[0].title}`}
+          />
+        </div>
       )}
     </div>
   )

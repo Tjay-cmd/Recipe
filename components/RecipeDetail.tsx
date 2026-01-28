@@ -8,6 +8,7 @@ import { PinterestShareButton } from './PinterestShareButton'
 import { AddToShoppingListButton } from './AddToShoppingListButton'
 import { NutritionFacts } from './NutritionFacts'
 import { AdSense } from './AdSense'
+import { CopyableLink } from './CopyableLink'
 import { formatTime } from '@/lib/utils'
 import Link from 'next/link'
 
@@ -122,6 +123,14 @@ export function RecipeDetail({ recipe, isSubscribed, isFavorite = false }: Recip
         >
           Jump to Steps
         </a>
+      </div>
+
+      {/* Copyable Link for Pinterest */}
+      <div className="mb-8 no-print">
+        <CopyableLink 
+          url={recipeUrl}
+          label={`📌 Pinterest Link: ${recipe.title}`}
+        />
       </div>
 
       {/* Ingredients */}
