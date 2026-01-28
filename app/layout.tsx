@@ -14,9 +14,7 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
   },
   other: {
-    // Add your Pinterest verification code here after claiming your site
-    // Get this from: https://pinterest.com/settings/claim
-    // 'p:domain_verify': 'your-verification-code-here',
+    'p:domain_verify': '88e4e9ac45450a5e768b80c267f67708',
   },
 }
 
@@ -28,10 +26,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Pinterest Domain Verification - Add your code after claiming */}
-        {process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION && (
-          <meta name="p:domain_verify" content={process.env.NEXT_PUBLIC_PINTEREST_VERIFICATION} />
-        )}
+        {/* Pinterest Domain Verification for yumspot.co.za */}
+        <meta name="p:domain_verify" content="88e4e9ac45450a5e768b80c267f67708" />
         {/* Google AdSense Verification - Required for site verification */}
         <script
           async
