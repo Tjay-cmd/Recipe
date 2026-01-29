@@ -230,7 +230,7 @@ export default function SwipePage() {
   function handlePointerDown(e: React.PointerEvent) {
     e.preventDefault() // Prevent default touch behavior
     setIsDragging(true)
-    setDragStart({ x: e.clientX || e.touches?.[0]?.clientX, y: e.clientY || e.touches?.[0]?.clientY })
+    setDragStart({ x: e.clientX, y: e.clientY })
     if (cardRef.current) {
       cardRef.current.style.transition = 'none'
     }
@@ -240,8 +240,8 @@ export default function SwipePage() {
     if (!isDragging) return
     e.preventDefault() // Prevent scrolling while swiping
 
-    const clientX = e.clientX || e.touches?.[0]?.clientX
-    const clientY = e.clientY || e.touches?.[0]?.clientY
+    const clientX = e.clientX
+    const clientY = e.clientY
     
     const offsetX = clientX - dragStart.x
     const offsetY = clientY - dragStart.y

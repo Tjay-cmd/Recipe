@@ -5,6 +5,29 @@ import { cookies } from 'next/headers'
 const DEFAULT_LIMIT = 10 // Number of recommendations to return
 const RECENT_LIKES_WINDOW = 50 // Consider last N likes for personalization
 
+type RecipeQueryResult = {
+  id: string
+  title: string
+  slug: string
+  description: string | null
+  cover_image_url: string | null
+  prep_minutes: number | null
+  cook_minutes: number | null
+  servings: number
+  difficulty: 'Easy' | 'Medium' | 'Hard' | null
+  tags: string[] | null
+  is_pro: boolean
+  views: number
+  calories: number | null
+  protein_g: number | null
+  carbs_g: number | null
+  fat_g: number | null
+  fiber_g: number | null
+  sugar_g: number | null
+  sodium_mg: number | null
+  cholesterol_mg: number | null
+}
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
@@ -161,7 +184,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Score each recipe based on similarity to user preferences
-    const scoredRecipes = candidateRecipes.map((recipe) => {
+    const scoredRecipes = candidateRecipes.map((recipe: RecipeQueryResult) => {
       let score = 0
 
       // Tag overlap score (highest weight)
@@ -206,7 +229,7 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    const recommendationsWithRatings = recommendations.map((recipe) => {
+    const recommendationsWithRatings = recommendations.map((recipe: RecipeQueryResult & { recommendation_score?: number; total_minutes?: number }) => {
       const ratingData = ratingMap.get(recipe.id)
       const avgRating = ratingData ? ratingData.total / ratingData.count : 0
       return {
@@ -271,7 +294,7 @@ async function getPopularRecipes(supabase: any, isPro: boolean, limit: number) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  const recipesWithMetadata = (recipes || []).map((recipe) => ({
+  const recipesWithMetadata = (recipes || []).map((recipe: RecipeQueryResult) => ({
     ...recipe,
     total_minutes: (recipe.prep_minutes || 0) + (recipe.cook_minutes || 0),
     average_rating: 0,
