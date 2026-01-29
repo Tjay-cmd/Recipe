@@ -85,6 +85,38 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Swipe Mode CTA */}
+      <section className="mb-20">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 to-orange-500 p-1">
+          <div className="bg-gradient-to-br from-emerald-50 via-orange-50 to-emerald-50 rounded-3xl p-8 md:p-12">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-block mb-4">
+                <span className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-orange-500 text-white rounded-full text-sm font-semibold">
+                  NEW FEATURE
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-600 to-orange-500 bg-clip-text text-transparent">
+                Can't decide what to cook?
+              </h2>
+              <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+                Swipe through viral recipes in seconds. Like what you see, skip what you don't. 
+                Get personalized recommendations without the dinner decision fatigue.
+              </p>
+              <Link
+                href="/swipe"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-600 to-orange-500 text-white rounded-full font-bold text-lg hover:from-emerald-700 hover:to-orange-600 hover:shadow-xl hover:scale-105 transition-all duration-300"
+              >
+                <span>Start Swiping</span>
+                <span className="text-2xl">👉</span>
+              </Link>
+              <p className="mt-4 text-sm text-gray-600">
+                Fast, fun, and personalized just for you
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Trending Recipes */}
       {trendingRecipes.length > 0 && (
         <section className="mb-20">

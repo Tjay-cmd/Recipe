@@ -113,3 +113,21 @@ export type RecipeRatingStats = {
   total_ratings: number
   user_rating?: number | null
 }
+
+export type RecipeSwipe = {
+  id: string
+  user_id: string
+  recipe_id: string
+  preference: number // -1 = dislike, 0 = skip, 1 = like
+  created_at: string
+  updated_at: string
+}
+
+export type SwipeCandidate = Recipe & {
+  average_rating: number
+  total_minutes: number
+}
+
+export type SwipeRecommendation = SwipeCandidate & {
+  recommendation_score?: number
+}

@@ -59,6 +59,9 @@ export function Header() {
             <Link href="/recipes" className="text-gray-700 hover:text-emerald-600 transition-colors">
               Recipes
             </Link>
+            <Link href="/swipe" className="text-gray-700 hover:text-emerald-600 transition-colors font-medium">
+              Swipe Mode
+            </Link>
             <Link href="/shopping-list" className="text-gray-700 hover:text-emerald-600 transition-colors">
               Shopping List
             </Link>
@@ -131,6 +134,13 @@ export function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Recipes
+              </Link>
+              <Link
+                href="/swipe"
+                className="text-gray-700 hover:text-emerald-600 transition-colors px-4 py-2 font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Swipe Mode
               </Link>
               <Link
                 href="/shopping-list"
