@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { trackEmailSubscribe } from '@/lib/pinterest'
 
 export function EmailCapture() {
   const [email, setEmail] = useState('')
@@ -34,6 +35,8 @@ export function EmailCapture() {
         setStatus('success')
         setMessage('Thanks for subscribing! Check your email.')
         setEmail('')
+        // Track Pinterest conversion
+        trackEmailSubscribe()
       } else {
         setStatus('error')
         setMessage(data.error || 'Something went wrong. Please try again.')

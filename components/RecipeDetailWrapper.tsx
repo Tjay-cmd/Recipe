@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { RecipeDetail } from './RecipeDetail'
 import { Recipe } from '@/types/database'
+import { trackRecipeView } from '@/lib/pinterest'
 
 interface RecipeDetailWrapperProps {
   recipe: Recipe
@@ -81,10 +82,13 @@ export function RecipeDetailWrapper({ recipe }: RecipeDetailWrapperProps) {
 
     checkAuthStatus()
 
+    // Track recipe view for Pinterest
+    trackRecipeView(recipe.title, recipe.id)
+
     return () => {
       mounted = false
     }
-  }, [recipe.id])
+  }, [recipe.id, recipe.title])
 
   // Render immediately with default values (prevents hydration mismatch)
   return (

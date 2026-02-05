@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { trackSearch } from '@/lib/pinterest'
 
 interface RecipesSearchProps {
   initialSearch?: string
@@ -71,6 +72,11 @@ export function RecipesSearch({ initialSearch, initialTag, initialSort }: Recipe
     }
 
     router.push(`/recipes?${params.toString()}`)
+    
+    // Track search if user entered a search query
+    if (search && search.trim()) {
+      trackSearch(search.trim())
+    }
   }, [search, selectedTag, sort, difficulty, maxTime, router, searchParams])
 
   return (

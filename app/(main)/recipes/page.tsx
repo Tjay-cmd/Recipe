@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { RecipeCard } from '@/components/RecipeCard'
 import { Recipe } from '@/types/database'
 import { RecipesSearch } from '@/components/RecipesSearch'
+import { SearchTracker } from '@/components/SearchTracker'
 
 interface RecipesPageProps {
   searchParams: {
@@ -49,7 +50,9 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
   const recipes = await getRecipes(searchParams)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      {searchParams.search && <SearchTracker searchQuery={searchParams.search} />}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-10">
         <h1 className="text-4xl md:text-5xl font-bold mb-8 text-gray-900">All Recipes</h1>
         <RecipesSearch initialSearch={searchParams.search} initialTag={searchParams.tag} initialSort={searchParams.sort} />
@@ -70,6 +73,7 @@ export default async function RecipesPage({ searchParams }: RecipesPageProps) {
           </p>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

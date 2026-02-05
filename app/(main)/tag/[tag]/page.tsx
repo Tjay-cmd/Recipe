@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { RecipeCard } from '@/components/RecipeCard'
 import { Recipe } from '@/types/database'
 import { notFound } from 'next/navigation'
+import { TagPageTracker } from '@/components/TagPageTracker'
 
 interface TagPageProps {
   params: {
@@ -27,7 +28,9 @@ export default async function TagPage({ params }: TagPageProps) {
   const recipes = await getRecipesByTag(tag)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      <TagPageTracker tag={tag} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl md:text-4xl font-bold mb-2 capitalize">{tag} Recipes</h1>
       <p className="text-gray-600 mb-8">
         {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'} found
@@ -47,6 +50,7 @@ export default async function TagPage({ params }: TagPageProps) {
           </a>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

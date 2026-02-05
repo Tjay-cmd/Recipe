@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { trackSignup } from '@/lib/pinterest'
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -33,6 +34,8 @@ export default function SignupPage() {
       setError(signUpError.message)
       setLoading(false)
     } else if (data.user) {
+      // Track Pinterest conversion
+      trackSignup()
       // Wait a moment for cookies to be set, then redirect
       // The middleware will refresh the session on the next request
       setTimeout(() => {

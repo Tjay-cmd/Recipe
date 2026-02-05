@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useToast } from './Toast'
+import { trackProSubscription } from '@/lib/pinterest'
 
 export function ProCheckoutButton() {
   const router = useRouter()
@@ -62,6 +63,8 @@ export function ProCheckoutButton() {
       const { approvalUrl } = await response.json()
 
       if (approvalUrl) {
+        // Track Pinterest conversion (Pro subscription checkout initiated)
+        trackProSubscription(3.0, 'USD')
         // Redirect to PayPal approval page
         window.location.href = approvalUrl
       } else {
