@@ -9,12 +9,17 @@ export function PinterestTag() {
   useEffect(() => {
     // Load Pinterest base code
     if (typeof window !== 'undefined' && !window.pintrk) {
-      window.pintrk = function () {
-        window.pintrk.queue.push(Array.prototype.slice.call(arguments))
+      // Create the pintrk function with required properties
+      const pintrk: any = function () {
+        pintrk.queue.push(Array.prototype.slice.call(arguments))
       }
-      const n = window.pintrk
-      n.queue = []
-      n.version = '3.0'
+      pintrk.queue = []
+      pintrk.version = '3.0'
+      
+      // Assign to window
+      window.pintrk = pintrk
+      
+      // Load the Pinterest script
       const t = document.createElement('script')
       t.async = true
       t.src = 'https://s.pinimg.com/ct/core.js'
@@ -29,6 +34,8 @@ export function PinterestTag() {
         const {
           data: { session },
         } = await supabase.auth.getSession()
+
+        if (!window.pintrk) return
 
         if (session?.user?.email) {
           // Use Enhanced Match with user email
