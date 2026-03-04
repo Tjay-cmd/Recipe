@@ -6,6 +6,7 @@ import { slugify } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { Recipe } from '@/types/database'
 import { ImageUpload } from './ImageUpload'
+import { parseRecipeText } from '@/lib/parse-recipe'
 
 interface RecipeFormData {
   title: string
@@ -61,6 +62,52 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
     sodium_mg: '',
     cholesterol_mg: '',
   })
+
+  const [pasteText, setPasteText] = useState('')
+  const [parseMessage, setParseMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  function handleParseRecipe() {
+    setParseMessage(null)
+    const trimmed = pasteText.trim()
+    if (!trimmed) {
+      setParseMessage({ type: 'error', text: 'Paste recipe text first' })
+      return
+    }
+
+    try {
+      const parsed = parseRecipeText(trimmed)
+      setFormData({
+        title: parsed.title,
+        slug: slugify(parsed.title),
+        description: parsed.description || '',
+        cover_image_url: formData.cover_image_url,
+        ingredients: parsed.ingredients.length > 0 ? parsed.ingredients : [''],
+        steps: parsed.steps.length > 0 ? parsed.steps : [''],
+        prep_minutes: parsed.prep_minutes || 0,
+        cook_minutes: parsed.cook_minutes || 0,
+        servings: parsed.servings || 1,
+        difficulty: parsed.difficulty || '',
+        tags: parsed.tags || '',
+        is_pro: formData.is_pro,
+        calories: parsed.calories || '',
+        protein_g: parsed.protein_g || '',
+        carbs_g: parsed.carbs_g || '',
+        fat_g: parsed.fat_g || '',
+        fiber_g: parsed.fiber_g || '',
+        sugar_g: parsed.sugar_g || '',
+        sodium_mg: parsed.sodium_mg || '',
+        cholesterol_mg: parsed.cholesterol_mg || '',
+      })
+      setPasteText('')
+      setParseMessage({
+        type: 'success',
+        text: `Parsed: ${parsed.title} — ${parsed.ingredients.length} ingredients, ${parsed.steps.length} steps`,
+      })
+    } catch (err) {
+      console.error('Parse error:', err)
+      setParseMessage({ type: 'error', text: 'Could not parse recipe. Try adding "Ingredients:" and "Instructions:" headers.' })
+    }
+  }
 
   // Load recipe data when editing
   useEffect(() => {
@@ -178,27 +225,27 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
   function handleBulkPasteNutrition(text: string) {
     // Parse ChatGPT nutrition format: "Calories: 520" or "Calories - 520" or "Calories = 520"
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-    
+
     const updates: Partial<RecipeFormData> = {}
-    
+
     lines.forEach(line => {
       // Remove bullet points
       line = line.replace(/^[•\-\*]\s*/, '').trim()
-      
+
       // Match pattern: "Field Name: value" or "Field Name - value" or "Field Name = value"
       const match = line.match(/^(.+?)[:\-\=]\s*(.+)$/i)
-      
+
       if (!match) return
-      
+
       const fieldName = match[1].trim().toLowerCase()
       const value = match[2].trim()
-      
+
       // Extract numeric value (can have decimals)
       const numMatch = value.match(/[\d.]+/)
       if (!numMatch) return
-      
+
       const numValue = numMatch[0]
-      
+
       // Match field names (case insensitive, flexible matching)
       if (fieldName.includes('calorie')) {
         updates.calories = numValue
@@ -218,7 +265,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
         updates.cholesterol_mg = numValue
       }
     })
-    
+
     if (Object.keys(updates).length > 0) {
       setFormData({ ...formData, ...updates })
     }
@@ -279,7 +326,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
       // Check admin access
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user?.email) {
         setError('You must be logged in')
         setLoading(false)
@@ -308,7 +355,6 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           return
         }
 
-        // Success - call callback and redirect
         if (onSuccess) onSuccess()
         router.push(`/recipes/${data.slug}`)
       } else {
@@ -325,7 +371,6 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           return
         }
 
-        // Success - call callback and redirect
         if (onSuccess) onSuccess()
         router.push(`/recipes/${data.slug}`)
       }
@@ -337,11 +382,67 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
-      <h3 className="text-xl font-semibold text-gray-900">
-        {recipe ? 'Edit Recipe' : 'Add New Recipe'}
-      </h3>
-      
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Paste & Parse - Rule-based recipe import */}
+      <details className="group bg-emerald-50/80 border border-emerald-100 rounded-xl overflow-hidden">
+        <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer list-none font-semibold text-emerald-800 hover:bg-emerald-100/50 transition-colors">
+          <svg className="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Paste & Parse Recipe
+          <span className="text-sm font-normal text-emerald-600">— Copy from any site or ChatGPT</span>
+        </summary>
+        <div className="p-4 pt-0 space-y-3">
+          <textarea
+            value={pasteText}
+            onChange={(e) => {
+              setPasteText(e.target.value)
+              setParseMessage(null)
+            }}
+            placeholder={`Chocolate Chip Cookies
+
+Ingredients:
+2 cups all-purpose flour
+1 tsp baking soda
+1 cup butter, softened
+3/4 cup sugar
+2 eggs
+2 cups chocolate chips
+
+Instructions:
+Preheat oven to 375°F.
+Mix flour and baking soda. Cream butter and sugar...
+Bake for 9-11 minutes.`}
+            rows={10}
+            className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-[15px] font-mono text-sm"
+          />
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-emerald-700">
+              Works best with clear &quot;Ingredients:&quot; and &quot;Instructions:&quot; headers. Also parses prep/cook time, servings, and nutrition.
+            </p>
+            <button
+              type="button"
+              onClick={handleParseRecipe}
+              disabled={!pasteText.trim()}
+              className="px-5 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+            >
+              Parse Recipe
+            </button>
+          </div>
+          {parseMessage && (
+            <div
+              className={`px-4 py-3 rounded-lg text-sm font-medium ${
+                parseMessage.type === 'success'
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}
+            >
+              {parseMessage.text}
+            </div>
+          )}
+        </div>
+      </details>
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
           {error}
@@ -349,7 +450,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[15px] font-semibold text-gray-800 mb-2">
           Title *
         </label>
         <input
@@ -357,12 +458,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           value={formData.title}
           onChange={(e) => handleTitleChange(e.target.value)}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[15px] font-semibold text-gray-800 mb-2">
           Slug *
         </label>
         <input
@@ -370,19 +471,19 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           value={formData.slug}
           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
           required
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[15px] font-semibold text-gray-800 mb-2">
           Description
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
         />
       </div>
 
@@ -394,7 +495,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-[15px] font-semibold text-gray-800">
             Ingredients *
           </label>
           <details className="relative">
@@ -429,7 +530,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               value={ingredient}
               onChange={(e) => handleIngredientChange(index, e.target.value)}
               placeholder={`Ingredient ${index + 1}`}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="block flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
             {formData.ingredients.length > 1 && (
               <button
@@ -453,7 +554,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
 
       <div>
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-[15px] font-semibold text-gray-800">
             Steps *
           </label>
           <details className="relative">
@@ -488,7 +589,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => handleStepChange(index, e.target.value)}
               placeholder={`Step ${index + 1}`}
               rows={2}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="block flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
             {formData.steps.length > 1 && (
               <button
@@ -512,7 +613,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[15px] font-semibold text-gray-800 mb-2">
             Prep Time (minutes)
           </label>
           <input
@@ -520,11 +621,11 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
             value={formData.prep_minutes}
             onChange={(e) => setFormData({ ...formData, prep_minutes: parseInt(e.target.value) || 0 })}
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[15px] font-semibold text-gray-800 mb-2">
             Cook Time (minutes)
           </label>
           <input
@@ -532,14 +633,14 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
             value={formData.cook_minutes}
             onChange={(e) => setFormData({ ...formData, cook_minutes: parseInt(e.target.value) || 0 })}
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[15px] font-semibold text-gray-800 mb-2">
             Servings
           </label>
           <input
@@ -547,17 +648,17 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
             value={formData.servings}
             onChange={(e) => setFormData({ ...formData, servings: parseInt(e.target.value) || 1 })}
             min="1"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-[15px] font-semibold text-gray-800 mb-2">
             Difficulty
           </label>
           <select
             value={formData.difficulty}
             onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
           >
             <option value="">Select...</option>
             <option value="Easy">Easy</option>
@@ -568,7 +669,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[15px] font-semibold text-gray-800 mb-2">
           Tags (comma-separated)
         </label>
         <input
@@ -576,7 +677,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           value={formData.tags}
           onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
           placeholder="Airfryer, High Protein, Budget"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
         />
       </div>
 
@@ -623,10 +724,10 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
           </details>
         </div>
         <p className="text-sm text-gray-600 mb-4">Per serving. Leave blank if not available.</p>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Calories
             </label>
             <input
@@ -635,12 +736,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, calories: e.target.value })}
               placeholder="250"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Protein (g)
             </label>
             <input
@@ -650,12 +751,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, protein_g: e.target.value })}
               placeholder="25.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Carbohydrates (g)
             </label>
             <input
@@ -665,12 +766,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, carbs_g: e.target.value })}
               placeholder="30.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Fat (g)
             </label>
             <input
@@ -680,12 +781,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, fat_g: e.target.value })}
               placeholder="10.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Fiber (g)
             </label>
             <input
@@ -695,12 +796,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, fiber_g: e.target.value })}
               placeholder="5.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Sugar (g)
             </label>
             <input
@@ -710,12 +811,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, sugar_g: e.target.value })}
               placeholder="8.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Sodium (mg)
             </label>
             <input
@@ -725,12 +826,12 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, sodium_mg: e.target.value })}
               placeholder="400.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-[15px] font-semibold text-gray-800 mb-2">
               Cholesterol (mg)
             </label>
             <input
@@ -740,7 +841,7 @@ export function AdminRecipeForm({ recipe, onSuccess }: AdminRecipeFormProps) {
               onChange={(e) => setFormData({ ...formData, cholesterol_mg: e.target.value })}
               placeholder="50.0"
               min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors text-[15px]"
             />
           </div>
         </div>

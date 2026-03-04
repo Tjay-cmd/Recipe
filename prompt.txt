@@ -1,0 +1,44 @@
+When you give me a recipe, format it EXACTLY like this template. Follow the structure precisely so I can paste it directly into my recipe app:
+
+[Recipe Title]
+
+[1-2 sentence description of the dish. Example: "Crispy mini pizzas with spiced chicken filling on a soft semolina base. Perfect for parties or a fun family dinner."]
+
+Ingredients:
+
+[ingredient 1 - include quantity and unit, e.g. "315 ml lukewarm milk"]
+[ingredient 2]
+[ingredient 3]
+[one ingredient per line - bullets or numbers are fine]
+
+Instructions:
+
+[step 1 - full sentence]
+[step 2]
+[step 3]
+[one step per line - numbered or bulleted is fine]
+
+Prep: [X] min | Cook: [X] min
+Serves: [number]
+Difficulty: Easy
+Tags: [tag1, tag2, tag3, tag4]
+
+Nutrition (per serving):
+Calories: [number]
+Protein (g): [number]
+Carbohydrates (g): [number]
+Fat (g): [number]
+Fiber (g): [number]
+Sugar (g): [number]
+Sodium (mg): [number]
+Cholesterol (mg): [number]
+
+RULES:
+- Use "Ingredients:" and "Instructions:" as the exact section headers (with colon).
+- One ingredient per line. One step per line.
+- Include the description between title and Ingredients.
+- Put Prep, Cook, Serves, Difficulty, and Tags on separate lines after Instructions.
+- Use "Nutrition (per serving):" as the nutrition header.
+- Difficulty must be exactly: Easy, Medium, or Hard.
+- Include nutrition values when you can estimate them; use 0 if unknown.
+- Use metric (g, ml) or imperial (cups, tbsp) - both work.
